@@ -1,23 +1,16 @@
 import "./App.css";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   User,
   ShieldCheck,
-  ChevronRight,
-  Search,
   Menu,
   X,
   Vote,
-  FileText,
-  Phone,
-  BarChart3,
   Users,
   Lock,
   Sun,
   Moon,
-  ArrowRight,
-  Zap,
   Globe,
   Activity,
 } from "lucide-react";
@@ -41,9 +34,9 @@ const App = () => {
   const toggleTheme = () => setIsDarkMode(!isDarkMode);
 
   // Colors
-  const saffron = "text-orange-500";
-  const green = "text-emerald-500";
-  const saffronBg = "bg-orange-500";
+  // const saffron = "text-orange-500";
+  // const green = "text-emerald-500";
+  // const saffronBg = "bg-orange-500";
   const greenBg = "bg-emerald-500";
 
   return (
