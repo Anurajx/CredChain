@@ -109,7 +109,7 @@ const App = () => {
                   isDarkMode ? "text-white" : "text-slate-900"
                 }`}
               >
-                Election Commission
+                VoteChain
               </span>
               <span
                 className={`text-[10px] font-medium tracking-[0.2em] uppercase leading-none ${
