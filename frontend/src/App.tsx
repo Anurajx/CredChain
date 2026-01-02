@@ -1103,7 +1103,7 @@ const App: React.FC = () => {
         {currentView === "home" && (
           <div className="container mx-auto px-6 max-w-7xl animate-in fade-in duration-700">
             <div className="flex flex-col items-center text-center">
-              <div
+              {/* <div
                 className={`flex items-center gap-3 px-4 py-1.5 rounded-full border mb-10 backdrop-blur-md transition-colors duration-300
                 ${
                   isDarkMode
@@ -1120,17 +1120,14 @@ const App: React.FC = () => {
                   ></span>
                 </span>
                 <span className="text-[11px] font-semibold tracking-widest uppercase">
-                  System Operational
+                  Ledger Operational
                 </span>
                 <div
                   className={`w-px h-3 ${
                     isDarkMode ? "bg-white/10" : "bg-slate-300"
                   }`}
                 ></div>
-                <span className="text-[11px] font-medium tracking-wide">
-                  Phase 1 Polling Live
-                </span>
-              </div>
+              </div> */}
 
               <h1 className="max-w-5xl mx-auto mb-8">
                 <span
