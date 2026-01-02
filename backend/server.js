@@ -65,6 +65,71 @@ app.get("/auth/:ID/:password", async (req, res) => {
   res.json({ success: true, voters });
 });
 
+//new Voter registration
+app.post("/register", async (req, res) => {
+  const {
+    ID,
+    Aadhaar,
+    FirstName,
+    LastName,
+    MotherName,
+    FatherName,
+    Sex,
+    Birthday,
+    Age,
+    DistrictId,
+    Phone,
+    VoterId,
+    DefPassword,
+  } = req.body;
+  const newVoter = new Voter({
+    ID,
+    Aadhaar,
+    FirstName,
+    LastName,
+    MotherName,
+    FatherName,
+    Sex,
+    Birthday,
+    Age,
+    "District ID": DistrictId,
+    Phone,
+    "Voter ID": VoterId,
+    Def_Password: DefPassword,
+  });
+  await newVoter.save();
+  res.json({ message: "Registration successful" });
+});
+
+//update voter details
+app.put("/update/:id", async (req, res) => {
+  try {
+    const voter = await Voter.findOneAndUpdate(
+      { ID: req.params.id },
+      req.body,
+      { new: true }
+    );
+    res.json(voter);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+//delete a voter
+app.delete("/delete/:id", async (req, res) => {
+  try {
+    const voter = await Voter.findOne({ ID: req.params.id });
+
+    if (!voter) return res.status(404).json({ message: "Not found" });
+
+    await Voter.deleteOne({ _id: voter._id });
+
+    res.json({ message: "Voter deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.listen(process.env.PORT, () =>
   console.log("Server running on port " + process.env.PORT)
 );

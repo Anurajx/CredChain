@@ -131,17 +131,6 @@ const App: React.FC = () => {
           ? "hover:border-blue-500/50"
           : "hover:border-blue-300",
       },
-      {
-        id: "candidates",
-        title: "Candidate List",
-        desc: "View affidavits & contestants.",
-        icon: ClipboardList,
-        colorClass: isDarkMode ? "text-emerald-500" : "text-emerald-600",
-        bgClass: isDarkMode ? "bg-emerald-500/10" : "bg-emerald-50",
-        borderHover: isDarkMode
-          ? "hover:border-emerald-500/50"
-          : "hover:border-emerald-300",
-      },
     ];
 
     return (
@@ -223,13 +212,17 @@ const App: React.FC = () => {
       e.preventDefault();
       setStatus("loading");
       try {
-        const response = await fetch("http://localhost:5000/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, password }),
-        });
-        if (response.ok) setStatus("success");
-        else setStatus("error");
+        const response = await fetch(
+          `https://hack4delhi.onrender.com/auth/${userId}/${password}`
+        );
+
+        const data = await response.json();
+        console.log(data);
+
+        if (data.success) {
+          //const voters = data.voters[0];
+          setStatus("success");
+        } else setStatus("error");
       } catch (error) {
         setStatus("error");
       }
@@ -292,7 +285,7 @@ const App: React.FC = () => {
                   isDarkMode ? "text-slate-500" : "text-slate-500"
                 }`}
               >
-                User ID / EPIC Number
+                User ID
               </label>
               <div className="relative group">
                 <input
@@ -372,7 +365,7 @@ const App: React.FC = () => {
 
             {status === "error" && (
               <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs text-center">
-                Connection to server failed (Localhost:5000 unavailable)
+                Invalid User ID or Password
               </div>
             )}
 
