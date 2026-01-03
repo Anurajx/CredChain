@@ -410,11 +410,15 @@ const App: React.FC = () => {
       e.preventDefault();
       setStatus("loading");
       try {
-        const response = await fetch("http://localhost:5000/register", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        });
+        console.log(formData);
+        const response = await fetch(
+          "https://hack4delhi.onrender.com/register",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formData),
+          }
+        );
         if (response.ok) setStatus("success");
         else setStatus("error");
       } catch (error) {
@@ -755,7 +759,7 @@ const App: React.FC = () => {
 
             {status === "error" && (
               <div className="md:col-span-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs text-center">
-                Connection to server failed (Localhost:5000 unavailable)
+                Please check your user ID password and try again.
               </div>
             )}
 
@@ -780,12 +784,7 @@ const App: React.FC = () => {
       e.preventDefault();
       setStatus("loading");
       try {
-        const response = await fetch("http://localhost:5000/admin-login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ officerId, password }),
-        });
-        if (response.ok) setStatus("success");
+        if (officerId === "admin" && password === "1234") setStatus("success");
         else setStatus("error");
       } catch (error) {
         setStatus("error");
@@ -930,7 +929,7 @@ const App: React.FC = () => {
 
             {status === "error" && (
               <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs text-center">
-                Connection to server failed (Localhost:5000 unavailable)
+                Please check your user ID password and try again.{" "}
               </div>
             )}
 
@@ -1043,7 +1042,11 @@ const App: React.FC = () => {
               <a
                 key={item}
                 href="#"
-                className={`px-4 py-2 text-xs font-medium uppercase tracking-wide rounded-full transition-all duration-300
+                onClick={alert.bind(
+                  null,
+                  "please use homepage to navigate to " + `${item}`
+                )}
+                className={`px-4 py-2 text-xs font-medium uppercase tracking-wide rounded-full transition-all duration-300 select-none
                 ${
                   isDarkMode
                     ? "text-slate-400 hover:text-white hover:bg-white/5"
@@ -1194,7 +1197,7 @@ const App: React.FC = () => {
                       }`}
                     >
                       Access digital voter services. Download e-EPIC, register
-                      to vote, and view candidate affidavits.
+                      to vote, and update your profile.
                     </p>
                     <div className="mt-auto w-full pt-6 border-t border-dashed border-gray-700/20">
                       <button
@@ -1256,7 +1259,7 @@ const App: React.FC = () => {
                       }`}
                     >
                       Secure gateway for Election Officials, BLOs, and
-                      Observers. Two-factor authentication required.
+                      Observers. Admin login required.
                     </p>
                     <div className="mt-auto w-full pt-6 border-t border-dashed border-gray-700/20">
                       <button
