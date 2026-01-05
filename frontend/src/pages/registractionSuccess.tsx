@@ -76,11 +76,11 @@ export default function RegistrationSuccess() {
           {/* Action Buttons */}
           <div className="flex flex-col gap-3">
             <button
-              onClick={() => navigate("/dashboard")}
+              onClick={() => navigate("/")}
               className="group w-full bg-white text-black font-semibold h-12 rounded-xl hover:bg-gray-200 transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-white/5"
             >
               <Home className="w-4 h-4" />
-              <span>Back to Dashboard</span>
+              <span>Back to Home</span>
             </button>
           </div>
         </div>
