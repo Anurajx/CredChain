@@ -753,7 +753,7 @@ const CitizenLogin: React.FC = () => {
 
   return (
     <div
-      className={`min-h-screen transition-colors duration-700 ease-in-out pt-24 pb-16 px-4 sm:px-6 lg:px-8 flex flex-col justify-center ${
+      className={`min-h-screen transition-colors duration-700 ease-in-out pt-20 pb-12 px-4 sm:px-6 lg:px-8 ${
         isDarkMode
           ? "bg-[#0a0a0c] text-slate-200"
           : "bg-[#f8f9fa] text-slate-900"
