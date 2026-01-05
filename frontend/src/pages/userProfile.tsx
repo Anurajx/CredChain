@@ -16,6 +16,7 @@ import {
   Landmark,
   type LucideIcon,
 } from "lucide-react";
+import { useTheme } from "../contexts/ThemeContext";
 
 // --- TYPE DEFINITIONS ---
 
@@ -80,7 +81,7 @@ const DEFAULT_USER_DATA: UserData = {
 };
 
 // --- COMPONENT DEFINED OUTSIDE TO PREVENT RE-RENDER/FOCUS LOSS ---
-const InputGroup: React.FC<InputGroupProps> = ({
+const InputGroup: React.FC<InputGroupProps & { isDarkMode?: boolean }> = ({
   label,
   name,
   value,
@@ -90,13 +91,18 @@ const InputGroup: React.FC<InputGroupProps> = ({
   fullWidth = false,
   disabled = false,
   isModified = false,
+  isDarkMode = false,
 }) => (
   <div
     className={`flex flex-col space-y-1.5 ${
       fullWidth ? "col-span-1 md:col-span-2" : ""
     }`}
   >
-    <label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2 select-none">
+    <label
+      className={`text-xs font-bold uppercase tracking-wider flex items-center gap-2 select-none ${
+        isDarkMode ? "text-slate-400" : "text-slate-500"
+      }`}
+    >
       {label}
     </label>
     <div className="relative group">
@@ -107,15 +113,18 @@ const InputGroup: React.FC<InputGroupProps> = ({
         onChange={onChange}
         disabled={disabled}
         className={`
-          w-full px-4 py-2.5 rounded-md border 
-          text-slate-900 placeholder-slate-400 text-sm font-medium
+          w-full px-4 py-2.5 rounded-md border text-sm font-medium
           transition-all duration-200 ease-in-out
           focus:outline-none focus:ring-1 
-          disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed
+          disabled:cursor-not-allowed
           ${
-            isModified
-              ? "border-orange-400 bg-orange-50/10 focus:ring-orange-500 focus:border-orange-500"
-              : "border-slate-300 bg-white hover:border-slate-400 focus:ring-[#000080] focus:border-[#000080]"
+            isDarkMode
+              ? isModified
+                ? "border-orange-400 bg-orange-500/10 text-white placeholder-slate-500 focus:ring-orange-500 focus:border-orange-500 disabled:bg-white/5 disabled:text-slate-500"
+                : "border-white/10 bg-white/5 text-white placeholder-slate-500 hover:border-white/20 focus:ring-blue-500 focus:border-blue-500 disabled:bg-white/5 disabled:text-slate-500"
+              : isModified
+              ? "border-orange-400 bg-orange-50/10 text-slate-900 placeholder-slate-400 focus:ring-orange-500 focus:border-orange-500 disabled:bg-slate-50 disabled:text-slate-500"
+              : "border-slate-300 bg-white text-slate-900 placeholder-slate-400 hover:border-slate-400 focus:ring-[#000080] focus:border-[#000080] disabled:bg-slate-50 disabled:text-slate-500"
           }
         `}
       />
@@ -124,6 +133,8 @@ const InputGroup: React.FC<InputGroupProps> = ({
           className={`absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none transition-colors duration-200 ${
             isModified
               ? "text-orange-500"
+              : isDarkMode
+              ? "text-slate-500 group-focus-within:text-blue-400"
               : "text-slate-400 group-focus-within:text-[#000080]"
           }`}
         >
@@ -138,6 +149,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
   userData = DEFAULT_USER_DATA,
 }) => {
   // 1. State Management
+  const { isDarkMode } = useTheme();
   const [formData, setFormData] = useState<UserData>(userData);
   const [initialData, setInitialData] = useState<UserData>(userData);
   const [hasChanges, setHasChanges] = useState<boolean>(false);
@@ -227,9 +239,21 @@ const UserProfile: React.FC<UserProfileProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+    <div
+      className={`min-h-screen font-sans transition-colors duration-700 ease-in-out ${
+        isDarkMode
+          ? "bg-[#0a0a0c] text-slate-200"
+          : "bg-slate-50 text-slate-900"
+      }`}
+    >
       {/* Top Navigation / Branding Bar */}
-      <div className="bg-white border-b border-slate-200 sticky top-0 z-40">
+      <div
+        className={`border-b sticky top-0 z-40 transition-colors duration-700 ${
+          isDarkMode
+            ? "bg-[#0f0f11] border-white/10"
+            : "bg-white border-slate-200"
+        }`}
+      >
         <div className="h-1 w-full bg-gradient-to-r from-[#FF9933] via-white to-[#138808]"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -238,16 +262,30 @@ const UserProfile: React.FC<UserProfileProps> = ({
                 <Landmark size={20} />
               </div>
               <div className="flex flex-col">
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-widest leading-none">
+                <span
+                  className={`text-xs font-bold uppercase tracking-widest leading-none ${
+                    isDarkMode ? "text-slate-500" : "text-slate-500"
+                  }`}
+                >
                   Government of India
                 </span>
-                <span className="text-sm font-bold text-[#000080] leading-tight">
+                <span
+                  className={`text-sm font-bold leading-tight ${
+                    isDarkMode ? "text-blue-400" : "text-[#000080]"
+                  }`}
+                >
                   Citizen Data Portal
                 </span>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="hidden md:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
+              <span
+                className={`hidden md:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  isDarkMode
+                    ? "bg-white/10 text-slate-300"
+                    : "bg-slate-100 text-slate-800"
+                }`}
+              >
                 Official Record
               </span>
             </div>
@@ -257,17 +295,39 @@ const UserProfile: React.FC<UserProfileProps> = ({
 
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-6">
         {/* Profile Header Card */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 md:p-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
+        <div
+          className={`rounded-lg shadow-sm border p-6 md:p-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden transition-colors duration-700 ${
+            isDarkMode
+              ? "bg-[#0f0f11] border-white/10"
+              : "bg-white border-slate-200"
+          }`}
+        >
           {/* Decorative Background Pattern */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full -translate-y-1/2 translate-x-1/2 opacity-50 pointer-events-none"></div>
+          <div
+            className={`absolute top-0 right-0 w-64 h-64 rounded-full -translate-y-1/2 translate-x-1/2 opacity-50 pointer-events-none ${
+              isDarkMode ? "bg-white/5" : "bg-slate-50"
+            }`}
+          ></div>
 
           {/* Avatar Area */}
           <div className="relative shrink-0">
-            <div className="w-28 h-28 md:w-32 md:h-32 rounded-full bg-slate-100 border-4 border-white shadow-md flex items-center justify-center text-4xl font-bold text-[#000080] select-none">
+            <div
+              className={`w-28 h-28 md:w-32 md:h-32 rounded-full border-4 shadow-md flex items-center justify-center text-4xl font-bold select-none ${
+                isDarkMode
+                  ? "bg-white/10 border-white/20 text-blue-400"
+                  : "bg-slate-100 border-white text-[#000080]"
+              }`}
+            >
               {formData.FirstName?.[0]}
               {formData.LastName?.[0]}
             </div>
-            <div className="absolute bottom-1 right-1 bg-green-600 text-white p-1.5 rounded-full ring-4 ring-white shadow-sm">
+            <div
+              className={`absolute bottom-1 right-1 p-1.5 rounded-full ring-4 shadow-sm ${
+                isDarkMode
+                  ? "bg-green-500 text-white ring-[#0f0f11]"
+                  : "bg-green-600 text-white ring-white"
+              }`}
+            >
               <CheckCircle2 size={16} strokeWidth={3} />
             </div>
           </div>
@@ -275,23 +335,49 @@ const UserProfile: React.FC<UserProfileProps> = ({
           {/* User Info */}
           <div className="flex-1 text-center md:text-left z-10">
             <div className="flex items-center justify-center md:justify-start gap-2 mb-1">
-              <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+              <h1
+                className={`text-3xl font-bold tracking-tight ${
+                  isDarkMode ? "text-white" : "text-slate-900"
+                }`}
+              >
                 {formData.FirstName} {formData.LastName}
               </h1>
             </div>
 
-            <p className="text-slate-500 font-medium mb-4 flex items-center justify-center md:justify-start gap-2">
+            <p
+              className={`font-medium mb-4 flex items-center justify-center md:justify-start gap-2 ${
+                isDarkMode ? "text-slate-400" : "text-slate-500"
+              }`}
+            >
               <MapPin size={16} className="text-[#FF9933]" />
               {formData.State}, India
             </p>
 
             <div className="flex flex-wrap justify-center md:justify-start gap-3">
-              <div className="px-3 py-1 bg-slate-100 rounded text-xs font-semibold text-slate-700 border border-slate-200 flex items-center gap-2">
-                <Shield size={14} className="text-[#000080]" />
+              <div
+                className={`px-3 py-1 rounded text-xs font-semibold border flex items-center gap-2 ${
+                  isDarkMode
+                    ? "bg-white/10 text-slate-300 border-white/20"
+                    : "bg-slate-100 text-slate-700 border-slate-200"
+                }`}
+              >
+                <Shield
+                  size={14}
+                  className={isDarkMode ? "text-blue-400" : "text-[#000080]"}
+                />
                 ID: {formData.ID}
               </div>
-              <div className="px-3 py-1 bg-slate-100 rounded text-xs font-semibold text-slate-700 border border-slate-200 flex items-center gap-2">
-                <Calendar size={14} className="text-[#000080]" />
+              <div
+                className={`px-3 py-1 rounded text-xs font-semibold border flex items-center gap-2 ${
+                  isDarkMode
+                    ? "bg-white/10 text-slate-300 border-white/20"
+                    : "bg-slate-100 text-slate-700 border-slate-200"
+                }`}
+              >
+                <Calendar
+                  size={14}
+                  className={isDarkMode ? "text-blue-400" : "text-[#000080]"}
+                />
                 DOB: {formData.Birthday}
               </div>
             </div>
@@ -302,7 +388,11 @@ const UserProfile: React.FC<UserProfileProps> = ({
           <div
             className={`rounded-md border p-4 flex items-center gap-3 shadow-sm animate-in fade-in slide-in-from-top-1 ${
               status.type === "error"
-                ? "bg-red-50 border-red-200 text-red-800"
+                ? isDarkMode
+                  ? "bg-red-500/10 border-red-500/20 text-red-400"
+                  : "bg-red-50 border-red-200 text-red-800"
+                : isDarkMode
+                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
                 : "bg-emerald-50 border-emerald-200 text-emerald-800"
             }`}
           >
@@ -319,9 +409,25 @@ const UserProfile: React.FC<UserProfileProps> = ({
           {/* Main Column */}
           <div className="lg:col-span-2 space-y-8">
             {/* Personal Details */}
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                <h2 className="text-sm font-bold text-[#000080] uppercase tracking-wide flex items-center gap-2">
+            <div
+              className={`rounded-lg shadow-sm border overflow-hidden transition-colors duration-700 ${
+                isDarkMode
+                  ? "bg-[#0f0f11] border-white/10"
+                  : "bg-white border-slate-200"
+              }`}
+            >
+              <div
+                className={`px-6 py-4 border-b flex items-center justify-between transition-colors duration-700 ${
+                  isDarkMode
+                    ? "border-white/10 bg-white/5"
+                    : "border-slate-100 bg-slate-50/50"
+                }`}
+              >
+                <h2
+                  className={`text-sm font-bold uppercase tracking-wide flex items-center gap-2 ${
+                    isDarkMode ? "text-blue-400" : "text-[#000080]"
+                  }`}
+                >
                   <User size={18} /> Personal Information
                 </h2>
               </div>
@@ -332,6 +438,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                   value={formData.FirstName}
                   onChange={handleInputChange}
                   isModified={initialData.FirstName !== formData.FirstName}
+                  isDarkMode={isDarkMode}
                 />
                 <InputGroup
                   label="Last Name"
@@ -339,6 +446,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                   value={formData.LastName}
                   onChange={handleInputChange}
                   isModified={initialData.LastName !== formData.LastName}
+                  isDarkMode={isDarkMode}
                 />
                 <InputGroup
                   label="Father's Name"
@@ -346,6 +454,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                   value={formData.FatherName}
                   onChange={handleInputChange}
                   isModified={initialData.FatherName !== formData.FatherName}
+                  isDarkMode={isDarkMode}
                 />
                 <InputGroup
                   label="Mother's Name"
@@ -353,6 +462,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                   value={formData.MotherName}
                   onChange={handleInputChange}
                   isModified={initialData.MotherName !== formData.MotherName}
+                  isDarkMode={isDarkMode}
                 />
                 <div className="grid grid-cols-2 gap-4">
                   <InputGroup
@@ -361,6 +471,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                     value={formData.Sex}
                     onChange={handleInputChange}
                     isModified={initialData.Sex !== formData.Sex}
+                    isDarkMode={isDarkMode}
                   />
                   <InputGroup
                     label="Age"
@@ -369,6 +480,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                     value={formData.Age}
                     onChange={handleInputChange}
                     isModified={initialData.Age !== formData.Age}
+                    isDarkMode={isDarkMode}
                   />
                 </div>
                 <InputGroup
@@ -378,14 +490,31 @@ const UserProfile: React.FC<UserProfileProps> = ({
                   icon={Calendar}
                   onChange={handleInputChange}
                   isModified={initialData.Birthday !== formData.Birthday}
+                  isDarkMode={isDarkMode}
                 />
               </div>
             </div>
 
             {/* Contact Details */}
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                <h2 className="text-sm font-bold text-[#000080] uppercase tracking-wide flex items-center gap-2">
+            <div
+              className={`rounded-lg shadow-sm border overflow-hidden transition-colors duration-700 ${
+                isDarkMode
+                  ? "bg-[#0f0f11] border-white/10"
+                  : "bg-white border-slate-200"
+              }`}
+            >
+              <div
+                className={`px-6 py-4 border-b flex items-center justify-between transition-colors duration-700 ${
+                  isDarkMode
+                    ? "border-white/10 bg-white/5"
+                    : "border-slate-100 bg-slate-50/50"
+                }`}
+              >
+                <h2
+                  className={`text-sm font-bold uppercase tracking-wide flex items-center gap-2 ${
+                    isDarkMode ? "text-blue-400" : "text-[#000080]"
+                  }`}
+                >
                   <Phone size={18} /> Contact & Location
                 </h2>
               </div>
@@ -398,6 +527,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                   icon={Phone}
                   onChange={handleInputChange}
                   isModified={initialData.Phone !== formData.Phone}
+                  isDarkMode={isDarkMode}
                 />
                 <InputGroup
                   label="State / Union Territory"
@@ -406,6 +536,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                   icon={Building2}
                   onChange={handleInputChange}
                   isModified={initialData.State !== formData.State}
+                  isDarkMode={isDarkMode}
                 />
                 <InputGroup
                   label="District Code"
@@ -417,6 +548,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                   isModified={
                     initialData["District ID"] !== formData["District ID"]
                   }
+                  isDarkMode={isDarkMode}
                 />
               </div>
             </div>
@@ -425,9 +557,25 @@ const UserProfile: React.FC<UserProfileProps> = ({
           {/* Side Column */}
           <div className="space-y-8">
             {/* Identity Proofs */}
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-                <h2 className="text-sm font-bold text-[#000080] uppercase tracking-wide flex items-center gap-2">
+            <div
+              className={`rounded-lg shadow-sm border overflow-hidden transition-colors duration-700 ${
+                isDarkMode
+                  ? "bg-[#0f0f11] border-white/10"
+                  : "bg-white border-slate-200"
+              }`}
+            >
+              <div
+                className={`px-6 py-4 border-b transition-colors duration-700 ${
+                  isDarkMode
+                    ? "border-white/10 bg-white/5"
+                    : "border-slate-100 bg-slate-50/50"
+                }`}
+              >
+                <h2
+                  className={`text-sm font-bold uppercase tracking-wide flex items-center gap-2 ${
+                    isDarkMode ? "text-blue-400" : "text-[#000080]"
+                  }`}
+                >
                   <Fingerprint size={18} /> Identity Proofs
                 </h2>
               </div>
@@ -439,6 +587,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                   icon={CreditCard}
                   onChange={handleInputChange}
                   isModified={initialData.Aadhaar !== formData.Aadhaar}
+                  isDarkMode={isDarkMode}
                 />
                 <InputGroup
                   label="Voter ID (EPIC)"
@@ -447,14 +596,31 @@ const UserProfile: React.FC<UserProfileProps> = ({
                   icon={CreditCard}
                   onChange={handleInputChange}
                   isModified={initialData["Voter ID"] !== formData["Voter ID"]}
+                  isDarkMode={isDarkMode}
                 />
               </div>
             </div>
 
             {/* System Metadata */}
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-                <h2 className="text-sm font-bold text-[#000080] uppercase tracking-wide flex items-center gap-2">
+            <div
+              className={`rounded-lg shadow-sm border overflow-hidden transition-colors duration-700 ${
+                isDarkMode
+                  ? "bg-[#0f0f11] border-white/10"
+                  : "bg-white border-slate-200"
+              }`}
+            >
+              <div
+                className={`px-6 py-4 border-b transition-colors duration-700 ${
+                  isDarkMode
+                    ? "border-white/10 bg-white/5"
+                    : "border-slate-100 bg-slate-50/50"
+                }`}
+              >
+                <h2
+                  className={`text-sm font-bold uppercase tracking-wide flex items-center gap-2 ${
+                    isDarkMode ? "text-blue-400" : "text-[#000080]"
+                  }`}
+                >
                   <Shield size={18} /> Secure Data
                 </h2>
               </div>
@@ -465,6 +631,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                   value={formData._id}
                   disabled
                   onChange={handleInputChange}
+                  isDarkMode={isDarkMode}
                 />
                 <InputGroup
                   label="User Reference ID"
@@ -472,6 +639,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                   value={formData.ID}
                   onChange={handleInputChange}
                   isModified={initialData.ID !== formData.ID}
+                  isDarkMode={isDarkMode}
                 />
                 <InputGroup
                   label="Access Key"
@@ -482,6 +650,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                   isModified={
                     initialData.Def_Password !== formData.Def_Password
                   }
+                  isDarkMode={isDarkMode}
                 />
               </div>
             </div>
@@ -492,20 +661,40 @@ const UserProfile: React.FC<UserProfileProps> = ({
 
       {/* Persistent Footer Action Bar */}
       <div
-        className={`fixed bottom-0 left-0 right-0 bg-white border-t-4 border-[#FF9933] shadow-[0_-5px_20px_rgba(0,0,0,0.1)] transition-transform duration-300 ease-in-out z-50 ${
+        className={`fixed bottom-0 left-0 right-0 border-t-4 border-[#FF9933] transition-all duration-300 ease-in-out z-50 ${
           hasChanges ? "translate-y-0" : "translate-y-full"
+        } ${
+          isDarkMode
+            ? "bg-[#0f0f11] shadow-[0_-5px_20px_rgba(0,0,0,0.5)]"
+            : "bg-white shadow-[0_-5px_20px_rgba(0,0,0,0.1)]"
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3 text-slate-700">
-            <div className="bg-orange-100 p-2 rounded-full text-[#FF9933]">
+          <div
+            className={`flex items-center gap-3 ${
+              isDarkMode ? "text-slate-300" : "text-slate-700"
+            }`}
+          >
+            <div
+              className={`p-2 rounded-full text-[#FF9933] ${
+                isDarkMode ? "bg-orange-500/20" : "bg-orange-100"
+              }`}
+            >
               <AlertCircle size={20} />
             </div>
             <div>
-              <p className="text-sm font-bold text-slate-800">
+              <p
+                className={`text-sm font-bold ${
+                  isDarkMode ? "text-white" : "text-slate-800"
+                }`}
+              >
                 Unsaved Changes Detected
               </p>
-              <p className="text-xs text-slate-500">
+              <p
+                className={`text-xs ${
+                  isDarkMode ? "text-slate-400" : "text-slate-500"
+                }`}
+              >
                 Update the central registry to save new data.
               </p>
             </div>
@@ -514,14 +703,22 @@ const UserProfile: React.FC<UserProfileProps> = ({
             <button
               onClick={handleReset}
               disabled={isLoading}
-              className="flex-1 sm:flex-none px-6 py-2.5 rounded text-sm font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors uppercase tracking-wide"
+              className={`flex-1 sm:flex-none px-6 py-2.5 rounded text-sm font-bold transition-colors uppercase tracking-wide ${
+                isDarkMode
+                  ? "text-slate-400 hover:bg-white/10 hover:text-white"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              }`}
             >
               Discard
             </button>
             <button
               onClick={handleSave}
               disabled={isLoading}
-              className="flex-1 sm:flex-none px-8 py-2.5 rounded bg-[#000080] text-white text-sm font-bold hover:bg-blue-900 transition-all shadow-md flex items-center justify-center gap-2 uppercase tracking-wide min-w-[140px]"
+              className={`flex-1 sm:flex-none px-8 py-2.5 rounded text-white text-sm font-bold transition-all shadow-md flex items-center justify-center gap-2 uppercase tracking-wide min-w-[140px] ${
+                isDarkMode
+                  ? "bg-blue-600 hover:bg-blue-700"
+                  : "bg-[#000080] hover:bg-blue-900"
+              }`}
             >
               {isLoading ? (
                 <Loader2 size={16} className="animate-spin" />

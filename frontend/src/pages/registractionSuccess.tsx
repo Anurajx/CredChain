@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { Check, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "../contexts/ThemeContext";
 
 // Main Application Component
 export default function RegistrationSuccess() {
   const [mounted, setMounted] = useState(false);
   const navigate = useNavigate();
+  const { isDarkMode } = useTheme();
   const [showContent, setShowContent] = useState(false);
 
   useEffect(() => {
@@ -16,30 +18,42 @@ export default function RegistrationSuccess() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#0f1115] text-white font-sans selection:bg-indigo-500/30 overflow-hidden relative">
+    <div
+      className={`min-h-screen font-sans selection:bg-indigo-500/30 overflow-hidden relative transition-colors duration-700 ease-in-out ${
+        isDarkMode ? "bg-[#0a0a0c] text-white" : "bg-[#f8f9fa] text-slate-900"
+      }`}
+    >
       {/* Background Ambience / Blobs */}
       <div
-        className={`fixed top-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-indigo-600/20 rounded-full blur-[120px] mix-blend-screen pointer-events-none transition-opacity duration-1000 ${
+        className={`fixed top-[-20%] left-[-10%] w-[50vw] h-[50vw] rounded-full blur-[120px] mix-blend-screen pointer-events-none transition-opacity duration-1000 ${
           mounted ? "opacity-100" : "opacity-0"
-        }`}
+        } ${isDarkMode ? "bg-indigo-600/20" : "bg-indigo-200/30"}`}
       />
       <div
-        className={`fixed bottom-[-20%] right-[-10%] w-[40vw] h-[40vw] bg-purple-600/10 rounded-full blur-[100px] mix-blend-screen pointer-events-none transition-opacity duration-1000 delay-300 ${
+        className={`fixed bottom-[-20%] right-[-10%] w-[40vw] h-[40vw] rounded-full blur-[100px] mix-blend-screen pointer-events-none transition-opacity duration-1000 delay-300 ${
           mounted ? "opacity-100" : "opacity-0"
-        }`}
+        } ${isDarkMode ? "bg-purple-600/10" : "bg-purple-200/20"}`}
       />
 
       {/* Grid Pattern Overlay */}
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
+      <div
+        className={`absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] pointer-events-none ${
+          isDarkMode ? "opacity-20" : "opacity-10"
+        }`}
+      ></div>
 
       {/* Main Content Container */}
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-6">
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-6 pt-24 pb-16">
         {/* Card */}
         <div
-          className={`w-full max-w-md bg-[#1a1d24]/80 backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-12 shadow-2xl ring-1 ring-white/10 transition-all duration-700 ease-out transform ${
+          className={`w-full max-w-md backdrop-blur-xl border rounded-3xl p-8 md:p-12 shadow-2xl ring-1 transition-all duration-700 ease-out transform ${
             showContent
               ? "translate-y-0 opacity-100 scale-100"
               : "translate-y-8 opacity-0 scale-95"
+          } ${
+            isDarkMode
+              ? "bg-[#1a1d24]/80 border-white/5 ring-white/10"
+              : "bg-white/90 border-slate-200 ring-slate-200/50"
           }`}
         >
           {/* Success Icon Animation */}
@@ -63,10 +77,20 @@ export default function RegistrationSuccess() {
 
           {/* Text Content */}
           <div className="text-center space-y-4 mb-10">
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight bg-gradient-to-b from-white to-white/60 bg-clip-text text-transparent">
+            <h1
+              className={`text-3xl md:text-4xl font-bold tracking-tight bg-gradient-to-b bg-clip-text text-transparent ${
+                isDarkMode
+                  ? "from-white to-white/60"
+                  : "from-slate-900 to-slate-700"
+              }`}
+            >
               Submitted to Blo
             </h1>
-            <p className="text-gray-400 text-lg leading-relaxed">
+            <p
+              className={`text-lg leading-relaxed ${
+                isDarkMode ? "text-gray-400" : "text-slate-600"
+              }`}
+            >
               Your request has been successfully queued.{" "}
               <br className="hidden md:block" />
               We'll notify you once the process completes.
@@ -77,7 +101,11 @@ export default function RegistrationSuccess() {
           <div className="flex flex-col gap-3">
             <button
               onClick={() => navigate("/")}
-              className="group w-full bg-white text-black font-semibold h-12 rounded-xl hover:bg-gray-200 transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-white/5"
+              className={`group w-full font-semibold h-12 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg ${
+                isDarkMode
+                  ? "bg-white text-black hover:bg-gray-200 shadow-white/5"
+                  : "bg-slate-900 text-white hover:bg-slate-800 shadow-slate-900/20"
+              }`}
             >
               <Home className="w-4 h-4" />
               <span>Back to Home</span>
@@ -87,19 +115,42 @@ export default function RegistrationSuccess() {
 
         {/* Footer */}
         <div
-          className={`mt-12 flex items-center gap-6 text-sm text-gray-600 transition-opacity duration-1000 delay-500 ${
+          className={`mt-12 flex items-center gap-6 text-sm transition-opacity duration-1000 delay-500 ${
             showContent ? "opacity-100" : "opacity-0"
-          }`}
+          } ${isDarkMode ? "text-gray-600" : "text-slate-500"}`}
         >
-          <a href="#" className="hover:text-gray-400 transition-colors">
+          <a
+            href="#"
+            className={`transition-colors ${
+              isDarkMode ? "hover:text-gray-400" : "hover:text-slate-700"
+            }`}
+          >
             Help Center
           </a>
-          <span className="w-1 h-1 bg-gray-700 rounded-full"></span>
-          <a href="#" className="hover:text-gray-400 transition-colors">
+          <span
+            className={`w-1 h-1 rounded-full ${
+              isDarkMode ? "bg-gray-700" : "bg-slate-400"
+            }`}
+          ></span>
+          <a
+            href="#"
+            className={`transition-colors ${
+              isDarkMode ? "hover:text-gray-400" : "hover:text-slate-700"
+            }`}
+          >
             Privacy
           </a>
-          <span className="w-1 h-1 bg-gray-700 rounded-full"></span>
-          <a href="#" className="hover:text-gray-400 transition-colors">
+          <span
+            className={`w-1 h-1 rounded-full ${
+              isDarkMode ? "bg-gray-700" : "bg-slate-400"
+            }`}
+          ></span>
+          <a
+            href="#"
+            className={`transition-colors ${
+              isDarkMode ? "hover:text-gray-400" : "hover:text-slate-700"
+            }`}
+          >
             Terms
           </a>
         </div>
