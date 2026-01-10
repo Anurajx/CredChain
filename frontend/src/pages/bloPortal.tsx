@@ -31,9 +31,9 @@ interface Voter {
   Sex: "M" | "F" | "O";
   Birthday: string;
   Age: number;
-  "District ID": number;
+  DistrictId: number;
   Phone: string;
-  "Voter ID": string;
+  VoterId: string;
   State: string;
   Def_Password?: string;
 
@@ -50,6 +50,9 @@ interface Voter {
   updateField?: string; // The field that was changed (e.g., "Sex", "LastName")
   updateValue?: string | number; // The new value for that field
   fullVoterData?: Voter; // Full voter data fetched from /voters/:id
+
+  // For registration cards - indicates if ID already exists in verified voters
+  idExists?: boolean;
 }
 
 // --- Mock Data ---
@@ -65,9 +68,9 @@ const MOCK_REGISTRATIONS: Voter[] = [
     Sex: "M",
     Birthday: "16-02-1984",
     Age: 37,
-    "District ID": 43,
+    DistrictId: 43,
     Phone: "9623412913",
-    "Voter ID": "ABC659753",
+    VoterId: "ABC659753",
     State: "Andhra Pradesh",
   },
   {
@@ -81,9 +84,9 @@ const MOCK_REGISTRATIONS: Voter[] = [
     Sex: "F",
     Birthday: "13-01-1998",
     Age: 23,
-    "District ID": 47,
+    DistrictId: 47,
     Phone: "9222325956",
-    "Voter ID": "JID563930",
+    VoterId: "JID563930",
     State: "Andhra Pradesh",
   },
   {
@@ -97,9 +100,9 @@ const MOCK_REGISTRATIONS: Voter[] = [
     Sex: "M",
     Birthday: "04-02-1988",
     Age: 33,
-    "District ID": 26,
+    DistrictId: 26,
     Phone: "9722768470",
-    "Voter ID": "KOF752745",
+    VoterId: "KOF752745",
     State: "Andhra Pradesh",
   },
 ];
@@ -116,9 +119,9 @@ const MOCK_UPDATES: Voter[] = [
     Sex: "M",
     Birthday: "12-05-1990",
     Age: 34,
-    "District ID": 43,
+    DistrictId: 43,
     Phone: "9876543210",
-    "Voter ID": "VXY998877",
+    VoterId: "VXY998877",
     State: "Andhra Pradesh",
     UpdateRequestType: "Migration",
     CurrentAddress: "H.No 12/A, Old Market, Dist 40",
@@ -135,9 +138,9 @@ const MOCK_UPDATES: Voter[] = [
     Sex: "F",
     Birthday: "20-11-1995",
     Age: 28,
-    "District ID": 43,
+    DistrictId: 43,
     Phone: "9123456780",
-    "Voter ID": "ANI112233",
+    VoterId: "ANI112233",
     State: "Andhra Pradesh",
     UpdateRequestType: "Phone Update",
     CurrentPhone: "9123456780",
@@ -154,9 +157,9 @@ const MOCK_UPDATES: Voter[] = [
     Sex: "M",
     Birthday: "06-10-1985",
     Age: 38,
-    "District ID": 43,
+    DistrictId: 43,
     Phone: "8885552222",
-    "Voter ID": "BIG876543",
+    VoterId: "BIG876543",
     State: "Andhra Pradesh",
     UpdateRequestType: "Name Correction",
     CurrentName: "Rajesh Ramayan Koothrappali",
@@ -187,12 +190,41 @@ export default function BLOPortal() {
           "https://hack4delhi.onrender.com/tempVoters"
         );
         if (!response.ok) throw new Error("Failed");
-        const result = await response.json();
-        setData(result);
+        const registrations = await response.json();
+
+        // Check if each ID already exists in verified voters database
+        const registrationsWithStatus = await Promise.all(
+          registrations.map(async (reg: any) => {
+            try {
+              const checkResponse = await fetch(
+                `https://hack4delhi.onrender.com/voters/${reg.ID}`
+              );
+              // If status is 200, ID exists; if 404, it's a new application
+              const idExists = checkResponse.ok;
+              return {
+                ...reg,
+                idExists,
+              };
+            } catch (err) {
+              // On error, assume it's a new application (safer default)
+              return {
+                ...reg,
+                idExists: false,
+              };
+            }
+          })
+        );
+
+        setData(registrationsWithStatus);
       } catch (err) {
         console.warn("Backend not reachable, using mock data.");
         setTimeout(() => {
-          setData(MOCK_REGISTRATIONS);
+          // For mock data, assume IDs don't exist (new applications)
+          const mockWithStatus = MOCK_REGISTRATIONS.map((reg) => ({
+            ...reg,
+            idExists: false,
+          }));
+          setData(mockWithStatus);
         }, 500);
       } finally {
         setLoading(false);
@@ -268,7 +300,7 @@ export default function BLOPortal() {
         // For new registrations, use ID field (not _id)
         const voterId = item.ID;
         if (!voterId) {
-          throw new Error("Voter ID not found");
+          throw new Error("VoterId not found");
         }
 
         const url =
@@ -332,7 +364,7 @@ export default function BLOPortal() {
 
   const filteredData = useMemo(() => {
     if (!activeDistrict) return data;
-    return data.filter((v) => v["District ID"].toString() === activeDistrict);
+    return data.filter((v) => v["DistrictId"].toString() === activeDistrict);
   }, [data, activeDistrict]);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -485,7 +517,7 @@ export default function BLOPortal() {
                 type="number"
                 value={districtInput}
                 onChange={(e) => setDistrictInput(e.target.value)}
-                placeholder="Filter by District ID"
+                placeholder="Filter by DistrictId"
                 className={`w-full pl-10 pr-4 py-2 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none shadow-sm ${
                   isDarkMode
                     ? "bg-white/5 border-white/10 text-white placeholder-slate-500 focus:bg-white/10 group-hover:border-white/20"
@@ -721,22 +753,45 @@ function RegistrationCard({
               </p>
             </div>
           </div>
-          <span
-            className={`px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wide border transition-colors duration-700 ${
-              isDarkMode
-                ? "bg-indigo-500/20 text-indigo-300 border-indigo-500/30"
-                : "bg-indigo-50 text-indigo-700 border-indigo-100"
-            }`}
-          >
-            Dist {data["District ID"]}
-          </span>
+          <div className="flex flex-col items-end gap-2">
+            <span
+              className={`px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wide border transition-colors duration-700 ${
+                isDarkMode
+                  ? "bg-indigo-500/20 text-indigo-300 border-indigo-500/30"
+                  : "bg-indigo-50 text-indigo-700 border-indigo-100"
+              }`}
+            >
+              Dist {data["DistrictId"]}
+            </span>
+            {/* ID Existence Indicator */}
+            {data.idExists !== undefined && (
+              <span
+                className={`px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wide border transition-colors duration-700 flex items-center gap-1.5 ${
+                  data.idExists
+                    ? isDarkMode
+                      ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                      : "bg-amber-50 text-amber-700 border-amber-200"
+                    : isDarkMode
+                    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                    : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                }`}
+              >
+                <div
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    data.idExists ? "bg-amber-400" : "bg-emerald-400"
+                  }`}
+                />
+                {data.idExists ? "Duplicate Entry" : "New Application"}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Data Grid */}
         <div className="grid grid-cols-2 gap-y-4 gap-x-2 text-sm">
           <DetailItem
-            label="Voter ID"
-            value={data["Voter ID"]}
+            label="VoterId"
+            value={data["VoterId"]}
             icon={<CreditCard size={14} />}
             isDarkMode={isDarkMode}
           />
@@ -832,7 +887,7 @@ function UpdateCard({
         displayName = field.replace(/([A-Z])/g, " $1").trim();
         break;
       case "State":
-      case "District ID":
+      case "DistrictId":
         icon = MapPin;
         displayName = field.replace(/([A-Z])/g, " $1").trim();
         break;
@@ -841,7 +896,7 @@ function UpdateCard({
         displayName = "Date of Birth";
         break;
       case "Aadhaar":
-      case "Voter ID":
+      case "VoterId":
         icon = CreditCard;
         displayName = field.replace(/([A-Z])/g, " $1").trim();
         break;
@@ -916,7 +971,7 @@ function UpdateCard({
             isDarkMode ? "text-slate-500" : "text-gray-400"
           }`}
         >
-          #{data["Voter ID"]}
+          #{data["VoterId"]}
         </span>
       </div>
 
@@ -935,9 +990,8 @@ function UpdateCard({
               isDarkMode ? "text-slate-400" : "text-gray-500"
             }`}
           >
-            District{" "}
-            {data.fullVoterData?.["District ID"] || data["District ID"]} •{" "}
-            {data.fullVoterData?.State || data.State}
+            District {data.fullVoterData?.["DistrictId"] || data["DistrictId"]}{" "}
+            • {data.fullVoterData?.State || data.State}
           </p>
           <p
             className={`text-xs mt-1 ${

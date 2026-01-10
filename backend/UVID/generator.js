@@ -12,21 +12,27 @@ const IDType = {
 };
 
 /**
- * Generates a deterministic unique 10-digit code
- * Format: [ID_TYPE][9_DIGITS]
+ * Generates a deterministic unique 16-digit code
+ * Format: [ID_TYPE][15_DIGITS]
  *
  * @param {Object} input - Object containing ID type, ID number, DOB, and secret code
  * @param {string} input.idType - Type of ID (use IDType constants)
- * @param {string} input.idNumber - ID number (Aadhaar/PAN/Passport etc.)
+ * @param {string|number} input.idNumber - ID number (Aadhaar/PAN/Passport etc.)
  * @param {string} input.dateOfBirth - Date of birth in YYYY-MM-DD format
- * @param {string} input.secretCode - Secret code for additional security
- * @returns {string} A unique 10-character code (1 letter + 9 digits)
+ * @param {string|number} input.secretCode - Secret code for additional security (can be string or number)
+ * @returns {string} A unique 16-character code (1 letter + 15 digits)
  */
 function generateUniqueCode(input) {
   const { idType, idNumber, dateOfBirth, secretCode } = input;
 
   // Validate inputs
-  if (!idNumber || !dateOfBirth || !secretCode) {
+  if (
+    !idNumber ||
+    !dateOfBirth ||
+    secretCode === undefined ||
+    secretCode === null ||
+    secretCode === ""
+  ) {
     throw new Error(
       "All fields are required: idNumber, dateOfBirth, and secretCode"
     );
@@ -36,10 +42,10 @@ function generateUniqueCode(input) {
     throw new Error("Invalid ID type. Use IDType constants.");
   }
 
-  // Normalize inputs (remove spaces, convert to uppercase)
-  const normalizedIdNumber = idNumber.replace(/\s+/g, "").toUpperCase();
-  const normalizedDOB = dateOfBirth.replace(/\s+/g, "");
-  const normalizedSecret = secretCode.trim();
+  // Convert all inputs to strings and normalize
+  const normalizedIdNumber = String(idNumber).replace(/\s+/g, "").toUpperCase();
+  const normalizedDOB = String(dateOfBirth).replace(/\s+/g, "");
+  const normalizedSecret = String(secretCode).trim();
 
   // Create a deterministic string by combining all inputs
   const combinedString = `${normalizedIdNumber}|${normalizedDOB}|${normalizedSecret}`;
@@ -51,17 +57,17 @@ function generateUniqueCode(input) {
   // Take portions of the hex hash and convert to decimal
   let numericString = "";
 
-  for (let i = 0; i < hash.length && numericString.length < 9; i += 2) {
+  for (let i = 0; i < hash.length && numericString.length < 15; i += 2) {
     const hexPair = hash.substr(i, 2);
     const decimalValue = parseInt(hexPair, 16);
     numericString += decimalValue.toString();
   }
 
-  // Take exactly 9 digits
-  const nineDigits = numericString.substr(0, 9);
+  // Take exactly 15 digits
+  const fifteenDigits = numericString.substr(0, 15);
 
-  // Combine ID type prefix with 9 digits
-  return `${idType}${nineDigits}`;
+  // Combine ID type prefix with 15 digits
+  return `${idType}${fifteenDigits}`;
 }
 
 /**
@@ -70,7 +76,7 @@ function generateUniqueCode(input) {
  * @returns {boolean} True if valid format
  */
 function validateCodeFormat(code) {
-  const pattern = /^[A-Z]\d{9}$/;
+  const pattern = /^[A-Z]\d{15}$/;
   return pattern.test(code);
 }
 
@@ -120,9 +126,9 @@ module.exports = {
 
 // Example usage (only runs if file is executed directly)
 if (require.main === module) {
-  console.log("=== Unique Code Generator ===\n");
+  console.log("=== Unique Code Generator (16 Digits) ===\n");
 
-  // Example 1: Aadhaar Card
+  // Example 1: Aadhaar Card with string secret
   const aadhaarInput = {
     idType: IDType.AADHAAR,
     idNumber: "1234 5678 9012",
@@ -132,6 +138,7 @@ if (require.main === module) {
 
   const aadhaarCode = generateUniqueCode(aadhaarInput);
   console.log("Aadhaar Code:", aadhaarCode);
+  console.log("Code Length:", aadhaarCode.length);
   console.log("Valid Format:", validateCodeFormat(aadhaarCode));
   console.log("ID Type:", getIDTypeFromCode(aadhaarCode));
   console.log("");
@@ -146,10 +153,25 @@ if (require.main === module) {
 
   const panCode = generateUniqueCode(panInput);
   console.log("PAN Code:", panCode);
+  console.log("Code Length:", panCode.length);
   console.log("Valid Format:", validateCodeFormat(panCode));
   console.log("");
 
-  // Example 3: Passport
+  // Example 3: Numeric secret code (like your use case)
+  const numericSecretInput = {
+    idType: IDType.AADHAAR,
+    idNumber: "234234234234",
+    dateOfBirth: "2026-01-07",
+    secretCode: 9302740174027292,
+  };
+
+  const numericSecretCode = generateUniqueCode(numericSecretInput);
+  console.log("Numeric Secret Code:", numericSecretCode);
+  console.log("Code Length:", numericSecretCode.length);
+  console.log("Valid Format:", validateCodeFormat(numericSecretCode));
+  console.log("");
+
+  // Example 4: Passport
   const passportInput = {
     idType: IDType.PASSPORT,
     idNumber: "Z1234567",
@@ -159,6 +181,7 @@ if (require.main === module) {
 
   const passportCode = generateUniqueCode(passportInput);
   console.log("Passport Code:", passportCode);
+  console.log("Code Length:", passportCode.length);
   console.log("Valid Format:", validateCodeFormat(passportCode));
   console.log("");
 
@@ -188,6 +211,25 @@ if (require.main === module) {
   console.log("Codes are different:", aadhaarCode !== differentCode);
   console.log("");
 
+  // Demonstration: Numeric vs String secret codes produce different results
+  console.log("=== Numeric Secret Code Test ===");
+  const numericSecret = generateUniqueCode({
+    idType: IDType.AADHAAR,
+    idNumber: "123456789012",
+    dateOfBirth: "1995-01-01",
+    secretCode: 123456789,
+  });
+  const stringSecret = generateUniqueCode({
+    idType: IDType.AADHAAR,
+    idNumber: "123456789012",
+    dateOfBirth: "1995-01-01",
+    secretCode: "123456789",
+  });
+  console.log("Numeric Secret Code:", numericSecret);
+  console.log("String Secret Code:", stringSecret);
+  console.log("Both are identical:", numericSecret === stringSecret);
+  console.log("");
+
   // Batch processing example
   console.log("=== Batch Processing ===");
   const batchUsers = [
@@ -201,7 +243,7 @@ if (require.main === module) {
       idType: IDType.PAN,
       idNumber: "AAAAA1111A",
       dateOfBirth: "1990-06-15",
-      secretCode: "secret2",
+      secretCode: 9876543210,
     },
     {
       idType: IDType.PASSPORT,

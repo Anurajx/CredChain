@@ -1,11 +1,15 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const { generateUniqueCode, IDType } = require("./UVID/generator");
+const { EPICgenerator, generateDistrictID } = require("./EPIC/generator");
 require("dotenv").config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+//adhaar is actually government ID number, did't refactor to avoid confusion
 
 /* -----------------------------------
    DATABASE CONNECTIONS
@@ -76,15 +80,88 @@ app.get("/auth/:ID/:password", async (req, res) => {
 
 // Apply for new voter (goes to TEMP DB)
 app.post("/register", async (req, res) => {
-  const newVoter = new TempVoter({
-    ...req.body,
-    "District ID": req.body.DistrictId,
-    "Voter ID": req.body.VoterId,
-    Def_Password: req.body.DefPassword,
-  });
+  try {
+    // Generate ID if not provided or empty
+    let generatedID = req.body.ID;
 
-  await newVoter.save();
-  res.json({ message: "Application submitted for verification" });
+    if (!generatedID || generatedID.trim() === "") {
+      // Map IDType from request to generator IDType constants
+      const idTypeMap = {
+        AADHAAR: IDType.AADHAAR,
+        PAN: IDType.PAN,
+        PASSPORT: IDType.PASSPORT,
+        DRIVING_LICENSE: IDType.DRIVING_LICENSE,
+        VOTER_ID: IDType.VOTER_ID,
+      };
+
+      // Determine ID type - default to AADHAAR if not specified
+      const requestIDType = req.body.IDType?.toUpperCase() || "AADHAAR";
+      const idType = idTypeMap[requestIDType] || IDType.AADHAAR;
+
+      // Get ID number - prefer Aadhaar, fallback to VoterId
+      const idNumber = req.body.Aadhaar || req.body.VoterId || "";
+      if (!idNumber) {
+        return res.status(400).json({
+          message: "Aadhaar or VoterId is required for ID generation",
+        });
+      }
+
+      // Get and convert Birthday format to YYYY-MM-DD
+      let dateOfBirth = req.body.Birthday || "";
+      if (!dateOfBirth) {
+        return res.status(400).json({
+          message: "Birthday is required for ID generation",
+        });
+      }
+
+      // Convert DD-MM-YYYY to YYYY-MM-DD if needed
+      if (dateOfBirth.match(/^\d{2}-\d{2}-\d{4}$/)) {
+        const [day, month, year] = dateOfBirth.split("-");
+        dateOfBirth = `${year}-${month}-${day}`;
+      } else if (dateOfBirth.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        // Already in YYYY-MM-DD format, use as is
+        dateOfBirth = dateOfBirth;
+      } else {
+        // Try to handle other formats - if invalid, generator will throw error
+        // For now, assume it's already in the correct format or needs manual fixing
+      }
+
+      // Generate secret code - use a combination of user data for uniqueness
+      // If you want to use a system-wide secret, use: process.env.UVID_SECRET || "defaultSecret"
+      const secretCode = idNumber + 292;
+      console.log("Using secret code for ID generation.", { secretCode });
+
+      // Generate unique ID
+      console.log("Params:", { idType, idNumber, dateOfBirth, secretCode });
+      generatedID = generateUniqueCode({
+        idType,
+        idNumber,
+        dateOfBirth,
+        secretCode,
+      });
+    }
+
+    // Create new voter with generated ID
+    const newVoter = new TempVoter({
+      ...req.body,
+      ID: generatedID,
+      // "District ID": req.body.DistrictId,
+      // "Voter ID": req.body.VoterId,
+      // Def_Password: req.body.DefPassword,
+    });
+
+    await newVoter.save();
+    res.json({
+      message: "Application submitted for verification",
+      generatedID: generatedID,
+    });
+  } catch (error) {
+    console.error("Registration error:", error);
+    res.status(400).json({
+      message: "Failed to process registration",
+      error: error.message,
+    });
+  }
 });
 
 // Approve voter (TEMP → STATE)
@@ -92,7 +169,16 @@ app.post("/approve/:id", async (req, res) => {
   const voter = await TempVoter.findOne({ ID: req.params.id });
   if (!voter) return res.status(404).json({ message: "Not found" });
 
-  await StateVoter.create(voter.toObject());
+  const data = voter.toObject(); //creating a new object to make modifications
+  delete data._id; // delete old mongo _id to avoid conflicts
+
+  data["VoterId"] = generateDistrictID({
+    districtId: data["DistrictId"],
+    state: data["State"],
+    randomNumber: Math.floor(1000000 + Math.random() * 9000000),
+  }); //generate new EPIC ID
+
+  await StateVoter.create(data);
   await TempVoter.deleteOne({ _id: voter._id });
 
   res.json({ message: "Voter approved and moved to StateVoter" });
