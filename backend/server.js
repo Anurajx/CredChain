@@ -73,7 +73,7 @@ app.get("/voters/:id", async (req, res) => {
 app.get("/auth/:ID/:password", async (req, res) => {
   const voters = await StateVoter.find({
     ID: req.params.ID,
-    Def_Password: req.params.password,
+    DefPassword: req.params.password, //Def_Password
   });
 
   if (!voters.length) return res.json({ success: false });
