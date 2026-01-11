@@ -164,7 +164,6 @@ class Blockchain {
 |-------------------------------
 | User ID : ${b.data.ID}
 | Field   : ${b.data.field}
-| Old     : ${b.data.oldValue ?? "N/A"}
 | New     : ${b.data.newValue}
 | Time    : ${b.data.timestamp}
 | Hash    : ${b.hash.slice(0, 20)}...
