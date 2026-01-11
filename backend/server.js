@@ -181,7 +181,12 @@ app.post("/approve/:id", async (req, res) => {
     randomNumber: Math.floor(1000000 + Math.random() * 9000000),
   }); //generate new EPIC ID
 
+  console.log(data);
+
   await StateVoter.create(data);
+
+  blockchain.addCitizenCreated(data); //send to blockchain
+
   await TempVoter.deleteOne({ _id: voter._id });
 
   res.json({ message: "Voter approved and moved to StateVoter" });
@@ -261,6 +266,9 @@ app.get("/blockchainRender/:id", (req, res) => {
 // Delete verified voter
 app.delete("/delete/:id", async (req, res) => {
   await StateVoter.deleteOne({ ID: req.params.id });
+
+  blockchain.addCitizenDeleted(req.params.id); //send to blockchain
+
   res.json({ message: "Voter deleted" });
 });
 

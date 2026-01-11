@@ -99,6 +99,57 @@ class Blockchain {
       }));
   }
 
+  addCitizenCreated(record) {
+    const data = {
+      ID: record.ID,
+      field: "CREATED",
+      oldValue: null,
+      newValue: {
+        IDType: record.IDType,
+        Aadhaar: record.Aadhaar,
+        FirstName: record.FirstName,
+        LastName: record.LastName,
+        MotherName: record.MotherName,
+        FatherName: record.FatherName,
+        Sex: record.Sex,
+        Birthday: record.Birthday,
+        Age: record.Age,
+        DistrictId: record.DistrictId,
+        State: record.State,
+        Phone: record.Phone,
+        VoterId: record.VoterId,
+      },
+      timestamp: new Date().toISOString(),
+    };
+
+    const prev = this.getLatestBlock();
+
+    const block = new Block(this.chain.length, Date.now(), data, prev.hash);
+
+    this.chain.push(block);
+
+    // initialize state cache
+    this.latestUserState[record.ID] = { ...data.newValue };
+  }
+
+  addCitizenDeleted(ID) {
+    const data = {
+      ID,
+      field: "DELETED",
+      oldValue: null,
+      newValue: "Citizen record deleted",
+      timestamp: new Date().toISOString(),
+    };
+
+    const prev = this.getLatestBlock();
+
+    const block = new Block(this.chain.length, Date.now(), data, prev.hash);
+
+    this.chain.push(block);
+
+    delete this.latestUserState[ID];
+  }
+
   renderUserChainASCII(ID) {
     const blocks = this.chain.filter((b) => b.data?.ID === ID);
 
