@@ -14,9 +14,11 @@ import {
   Loader2,
   Building2,
   Landmark,
+  Trash2,
   type LucideIcon,
 } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
+import { useNavigate } from "react-router-dom";
 
 // --- TYPE DEFINITIONS ---
 
@@ -150,11 +152,14 @@ const UserProfile: React.FC<UserProfileProps> = ({
 }) => {
   // 1. State Management
   const { isDarkMode } = useTheme();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<UserData>(userData);
   const [initialData, setInitialData] = useState<UserData>(userData);
   const [hasChanges, setHasChanges] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [status, setStatus] = useState<StatusState>({ type: "", message: "" });
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
   // 2. Handle Dynamic Prop Updates
   useEffect(() => {
@@ -190,8 +195,44 @@ const UserProfile: React.FC<UserProfileProps> = ({
     setStatus({ type: "", message: "" });
   };
 
-  // 4. Update Submission Logic
-  // 4. Update Submission Logic
+  // 4. Delete Handler
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    setStatus({ type: "", message: "" });
+
+    try {
+      const response = await fetch(
+        `https://hack4delhi.onrender.com/delete/${formData.ID}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (response.ok || response.status === 200) {
+        setStatus({
+          type: "success",
+          message: "Voter deleted successfully.",
+        });
+        // Navigate away after a short delay
+        setTimeout(() => {
+          navigate("/");
+        }, 1500);
+      } else {
+        throw new Error("Failed to delete");
+      }
+    } catch (error) {
+      console.error("Delete failed:", error);
+      setStatus({
+        type: "error",
+        message: "Failed to delete voter. Please check network connection.",
+      });
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
+
+  // 5. Update Submission Logic
   const handleSave = async () => {
     setIsLoading(true);
     setStatus({ type: "", message: "" });
@@ -671,6 +712,106 @@ const UserProfile: React.FC<UserProfileProps> = ({
         </div>
         <div className="h-24"></div> {/* Spacer for fixed footer */}
       </div>
+
+      {/* Delete Button - Fixed Position */}
+      <button
+        onClick={() => setShowDeleteConfirm(true)}
+        disabled={isDeleting || isLoading}
+        className={`fixed bottom-6 right-6 z-40 p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed ${
+          isDarkMode
+            ? "bg-red-600 hover:bg-red-700 text-white"
+            : "bg-red-500 hover:bg-red-600 text-white"
+        }`}
+        title="Delete Voter Record"
+      >
+        {isDeleting ? (
+          <Loader2 size={20} className="animate-spin" />
+        ) : (
+          <Trash2 size={20} />
+        )}
+      </button>
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div
+            className={`rounded-lg shadow-xl border max-w-md w-full mx-4 transition-colors duration-700 ${
+              isDarkMode
+                ? "bg-[#0f0f11] border-white/10"
+                : "bg-white border-slate-200"
+            }`}
+          >
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div
+                  className={`p-2 rounded-full ${
+                    isDarkMode ? "bg-red-500/20" : "bg-red-100"
+                  }`}
+                >
+                  <AlertCircle
+                    size={24}
+                    className={isDarkMode ? "text-red-400" : "text-red-600"}
+                  />
+                </div>
+                <h3
+                  className={`text-lg font-bold ${
+                    isDarkMode ? "text-white" : "text-slate-900"
+                  }`}
+                >
+                  Delete Voter Record
+                </h3>
+              </div>
+              <p
+                className={`text-sm mb-6 ${
+                  isDarkMode ? "text-slate-400" : "text-slate-600"
+                }`}
+              >
+                Are you sure you want to delete this voter record? This action
+                cannot be undone. The record for{" "}
+                <span className="font-semibold">
+                  {formData.FirstName} {formData.LastName}
+                </span>{" "}
+                (ID: {formData.ID}) will be permanently removed from the
+                system.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={isDeleting}
+                  className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
+                    isDarkMode
+                      ? "text-slate-300 hover:bg-white/10"
+                      : "text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className={`px-4 py-2 rounded text-sm font-medium text-white transition-colors flex items-center gap-2 ${
+                    isDarkMode
+                      ? "bg-red-600 hover:bg-red-700"
+                      : "bg-red-500 hover:bg-red-600"
+                  }`}
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={16} />
+                      Delete
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Persistent Footer Action Bar */}
       <div

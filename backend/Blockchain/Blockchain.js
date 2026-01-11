@@ -102,7 +102,7 @@ class Blockchain {
   addCitizenCreated(record) {
     const data = {
       ID: record.ID,
-      field: "CREATED",
+      field: "VOTER CREATED",
       oldValue: null,
       newValue: {
         IDType: record.IDType,
@@ -135,7 +135,7 @@ class Blockchain {
   addCitizenDeleted(ID) {
     const data = {
       ID,
-      field: "DELETED",
+      field: "VOTER DELETED",
       oldValue: null,
       newValue: "Citizen record deleted",
       timestamp: new Date().toISOString(),
