@@ -396,11 +396,16 @@ const RegistrationForm: React.FC<{
         body: JSON.stringify(payload),
       });
       if (response.ok) {
+        //console.log(response);
         setStatus("success");
+        const data = await response.json();
+        console.log("Backend response:", data);
         // Navigate to success page after a short delay
         setTimeout(() => {
-          navigate("/registration-success");
-        }, 1500);
+          navigate("/registration-success", {
+            state: { message: data.message, generatedID: data.generatedID },
+          });
+        }, 1000);
       } else setStatus("error");
     } catch (error) {
       setStatus("error");

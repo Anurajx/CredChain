@@ -790,13 +790,13 @@ function RegistrationCard({
         {/* Data Grid */}
         <div className="grid grid-cols-2 gap-y-4 gap-x-2 text-sm">
           <DetailItem
-            label="VoterId"
-            value={data["VoterId"]}
+            label="UVID"
+            value={data["ID"]}
             icon={<CreditCard size={14} />}
             isDarkMode={isDarkMode}
           />
           <DetailItem
-            label="Aadhaar"
+            label="Gov ID"
             value={data.Aadhaar}
             icon={<Fingerprint size={14} />}
             isDarkMode={isDarkMode}

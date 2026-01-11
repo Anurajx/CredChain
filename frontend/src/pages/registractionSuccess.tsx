@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import { Check, Home } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 
 // Main Application Component
 export default function RegistrationSuccess() {
+  const location = useLocation();
+  const generatedID = location.state?.generatedID || "N/A";
+
   const [mounted, setMounted] = useState(false);
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
@@ -93,7 +96,7 @@ export default function RegistrationSuccess() {
             >
               Your request has been successfully queued.{" "}
               <br className="hidden md:block" />
-              We'll notify you once the process completes.
+              once approved, your ID will be {generatedID}.
             </p>
           </div>
 
