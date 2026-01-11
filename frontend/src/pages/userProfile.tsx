@@ -33,10 +33,10 @@ interface UserData {
   Sex: string;
   Birthday: string;
   Age: number;
-  "District ID": number;
+  DistrictId: number;
   Phone: string;
-  "Voter ID": string;
-  Def_Password: string;
+  VoterId: string;
+  DefPassword: string;
   State: string;
   // Index signature to allow dynamic access via keys
   [key: string]: string | number;
@@ -75,10 +75,10 @@ const DEFAULT_USER_DATA: UserData = {
   Sex: "M",
   Birthday: "01-06-1998",
   Age: 22,
-  "District ID": 2104,
+  DistrictId: 2104,
   Phone: "9445560413 , 9668871603",
-  "Voter ID": "PLD9O0401",
-  Def_Password: "PLD@8779",
+  VoterId: "PLD9O0401",
+  DefPassword: "PLD@8779",
   State: "Sikkim",
 };
 
@@ -173,7 +173,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
     const { name, value } = e.target;
     // Auto-convert number fields
     const newValue =
-      name === "Age" || name === "District ID" ? Number(value) : value;
+      name === "Age" || name === "DistrictId" ? Number(value) : value;
 
     const updatedData: UserData = {
       ...formData,
@@ -543,7 +543,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                   value={formData.Birthday}
                   icon={Calendar}
                   onChange={handleInputChange}
-                  isModified={initialData.Birthday !== formData.Birthday}
+                  disabled
                   isDarkMode={isDarkMode}
                 />
               </div>
@@ -594,13 +594,13 @@ const UserProfile: React.FC<UserProfileProps> = ({
                 />
                 <InputGroup
                   label="District Code"
-                  name="District ID"
+                  name="DistrictId"
                   type="number"
-                  value={formData["District ID"]}
+                  value={formData["DistrictId"]}
                   icon={Hash}
                   onChange={handleInputChange}
                   isModified={
-                    initialData["District ID"] !== formData["District ID"]
+                    initialData["DistrictId"] !== formData["DistrictId"]
                   }
                   isDarkMode={isDarkMode}
                 />
@@ -640,16 +640,16 @@ const UserProfile: React.FC<UserProfileProps> = ({
                   value={formData.Aadhaar}
                   icon={CreditCard}
                   onChange={handleInputChange}
-                  isModified={initialData.Aadhaar !== formData.Aadhaar}
+                  disabled
                   isDarkMode={isDarkMode}
                 />
                 <InputGroup
-                  label="Voter ID (EPIC)"
-                  name="Voter ID"
-                  value={formData["Voter ID"]}
+                  label="VoterId (EPIC)"
+                  name="VoterId"
+                  value={formData["VoterId"]}
                   icon={CreditCard}
                   onChange={handleInputChange}
-                  isModified={initialData["Voter ID"] !== formData["Voter ID"]}
+                  disabled
                   isDarkMode={isDarkMode}
                 />
               </div>
@@ -688,22 +688,20 @@ const UserProfile: React.FC<UserProfileProps> = ({
                   isDarkMode={isDarkMode}
                 />
                 <InputGroup
-                  label="User Reference ID"
+                  label="UVID"
                   name="ID"
                   value={formData.ID}
                   onChange={handleInputChange}
-                  isModified={initialData.ID !== formData.ID}
+                  disabled
                   isDarkMode={isDarkMode}
                 />
                 <InputGroup
                   label="Access Key"
-                  name="Def_Password"
+                  name="DefPassword"
                   type="password"
-                  value={formData.Def_Password}
+                  value={formData.DefPassword}
                   onChange={handleInputChange}
-                  isModified={
-                    initialData.Def_Password !== formData.Def_Password
-                  }
+                  isModified={initialData.DefPassword !== formData.DefPassword}
                   isDarkMode={isDarkMode}
                 />
               </div>
@@ -771,8 +769,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                 <span className="font-semibold">
                   {formData.FirstName} {formData.LastName}
                 </span>{" "}
-                (ID: {formData.ID}) will be permanently removed from the
-                system.
+                (ID: {formData.ID}) will be permanently removed from the system.
               </p>
               <div className="flex gap-3 justify-end">
                 <button
