@@ -87,7 +87,7 @@ export default function RegistrationSuccess() {
                   : "from-slate-900 to-slate-700"
               }`}
             >
-              Submitted to BLO
+              Submitted to Officer
             </h1>
             <p
               className={`text-lg leading-relaxed ${

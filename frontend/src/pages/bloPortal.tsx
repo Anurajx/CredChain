@@ -416,7 +416,7 @@ export default function BLOPortal() {
                   isDarkMode ? "text-white" : "text-gray-900"
                 }`}
               >
-                BLO
+                Officer
                 <span
                   className={`font-light ${
                     isDarkMode ? "text-slate-400" : "text-gray-400"

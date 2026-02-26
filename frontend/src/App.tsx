@@ -145,7 +145,7 @@ const App: React.FC = () => {
                       isDarkMode ? "text-white" : "text-slate-900"
                     }`}
                   >
-                    VoteChain
+                    CredChain
                   </span>
                   <span
                     className={`text-[10px] font-medium tracking-[0.2em] uppercase leading-none ${
@@ -158,7 +158,7 @@ const App: React.FC = () => {
               </div>
 
               <div className="hidden md:flex items-center gap-1">
-                {["About", "Voter Services", "Elections", "Media"].map(
+                {["About", "Credential Services", "Elections", "Media"].map(
                   (item) => (
                     <a
                       key={item}
@@ -283,8 +283,8 @@ const App: React.FC = () => {
                       isDarkMode ? "text-slate-400" : "text-slate-500"
                     }`}
                   >
-                    An Blockchain based voter lifecycle event log for the
-                    Election Commission of India.
+                    A blockchain-based government ID lifecycle event log for the
+                    People of India.
                     <span
                       className={
                         isDarkMode ? "text-slate-200" : "text-slate-700"
@@ -329,8 +329,8 @@ const App: React.FC = () => {
                             isDarkMode ? "text-slate-400" : "text-slate-500"
                           }`}
                         >
-                          Access digital voter services. Download e-EPIC,
-                          register to vote, and update your profile.
+                          Access your digital government ID services. Download
+                          your e-ID and keep your details up to date.
                         </p>
                         <div className="mt-auto w-full pt-6 border-t border-dashed border-gray-700/20">
                           <button
@@ -391,8 +391,8 @@ const App: React.FC = () => {
                             isDarkMode ? "text-slate-400" : "text-slate-500"
                           }`}
                         >
-                          Secure gateway for Election Officials, BLOs, and
-                          Observers. Admin login required.
+                          Secure gateway for Election Officials, Credential
+                          Officers, and Observers. Admin login required.
                         </p>
                         <div className="mt-auto w-full pt-6 border-t border-dashed border-gray-700/20">
                           <button
@@ -433,10 +433,10 @@ const App: React.FC = () => {
                   >
                     {[
                       {
-                        label: "Electorate Size",
+                        label: "Credential Base",
                         value: "968M+",
                         icon: Users,
-                        sub: "Registered Voters",
+                        sub: "Registered Credentials",
                       },
                       {
                         label: "Infrastructure",
@@ -454,7 +454,7 @@ const App: React.FC = () => {
                         label: "Participation",
                         value: "67.4%",
                         icon: Activity,
-                        sub: "Voter Turnout",
+                        sub: "Credential Activity",
                       },
                     ].map((stat, idx) => (
                       <div
@@ -522,7 +522,7 @@ const App: React.FC = () => {
                         isDarkMode ? "text-white" : "text-slate-900"
                       }`}
                     >
-                      ECI Portal
+                      CredChain Portal
                     </span>
                   </div>
                   <p
@@ -530,9 +530,9 @@ const App: React.FC = () => {
                       isDarkMode ? "text-slate-500" : "text-slate-500"
                     }`}
                   >
-                    The Election Commission of India is an autonomous
+                    The VoteChain India is an autonomous
                     constitutional authority responsible for administering
-                    election processes in India.
+                    credential processes in India.
                   </p>
                 </div>
                 <div className="md:col-span-2">
@@ -545,10 +545,10 @@ const App: React.FC = () => {
                   </h4>
                   <ul className="space-y-4">
                     {[
-                      "Voter Registration",
-                      "Download e-EPIC",
+                      "Credential Registration",
+                      "Download e-ID",
                       "Track Application",
-                      "Search in Roll",
+                      "Search in Registry",
                     ].map((link) => (
                       <li key={link}>
                         <a
@@ -647,7 +647,7 @@ const App: React.FC = () => {
                     : "border-slate-100 text-slate-400"
                 }`}
               >
-                <p>&copy; 2025 Election Commission of India. NIC/GOI.</p>
+                <p>&copy; 2025 CredChain India. NIC/GOI.</p>
                 <div className="flex gap-8">
                   <a href="#" className="hover:text-current transition-colors">
                     Privacy

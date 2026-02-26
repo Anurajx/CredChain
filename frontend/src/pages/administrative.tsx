@@ -84,7 +84,7 @@ const Administrative: React.FC = () => {
                 isDarkMode ? "text-slate-400" : "text-slate-500"
               }`}
             >
-              Restricted access for Election Officials & BLOs
+              Restricted access for Election Officials & Officers
             </p>
           </div>
 
@@ -95,7 +95,7 @@ const Administrative: React.FC = () => {
                   isDarkMode ? "text-slate-500" : "text-slate-500"
                 }`}
               >
-                Officer ID / BLO ID
+                Officer ID
               </label>
               <div className="relative group">
                 <input

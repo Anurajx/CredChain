@@ -71,7 +71,7 @@ const PortalLanding: React.FC<{
     {
       id: "register",
       title: "New Registration",
-      desc: "Apply for Voter ID (Form 6).",
+      desc: "Apply for Government ID (Form 6).",
       icon: UserPlus,
       colorClass: isDarkMode ? "text-blue-500" : "text-blue-600",
       bgClass: isDarkMode ? "bg-blue-500/10" : "bg-blue-50",
@@ -230,7 +230,7 @@ const LoginForm: React.FC<{
               isDarkMode ? "text-slate-400" : "text-slate-500"
             }`}
           >
-            Enter your credentials to access ECI services
+            Enter your credentials to access CredChain services
           </p>
         </div>
 
@@ -467,14 +467,14 @@ const RegistrationForm: React.FC<{
               isDarkMode ? "text-white" : "text-slate-900"
             }`}
           >
-            New Voter Registration
+            New Government ID Registration
           </h2>
           <p
             className={`text-sm ${
               isDarkMode ? "text-slate-400" : "text-slate-500"
             }`}
           >
-            Fill out the details below to apply for a new Voter ID Card (Form 6)
+            Fill out the details below to apply for a new Government ID (Form 6)
           </p>
         </div>
 
@@ -520,7 +520,7 @@ const RegistrationForm: React.FC<{
                 <option value="PAN">PAN</option>
                 <option value="Passport">Passport</option>
                 <option value="Driving_License">Driving License</option>
-                <option value="Voter_ID">Voter ID</option>
+                <option value="Voter_ID">Voter ID (EPIC)</option>
               </select>
               <Users className={iconClasses} />
               <div

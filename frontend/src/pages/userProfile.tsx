@@ -211,7 +211,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
       if (response.ok || response.status === 200) {
         setStatus({
           type: "success",
-          message: "Voter deleted successfully.",
+          message: "Record deleted successfully.",
         });
         // Navigate away after a short delay
         setTimeout(() => {
@@ -224,7 +224,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
       console.error("Delete failed:", error);
       setStatus({
         type: "error",
-        message: "Failed to delete voter. Please check network connection.",
+        message: "Failed to delete record. Please check network connection.",
       });
     } finally {
       setIsDeleting(false);
@@ -644,7 +644,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                   isDarkMode={isDarkMode}
                 />
                 <InputGroup
-                  label="VoterId (EPIC)"
+                  label="Government ID (EPIC)"
                   name="VoterId"
                   value={formData["VoterId"]}
                   icon={CreditCard}
@@ -720,7 +720,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
             ? "bg-red-600 hover:bg-red-700 text-white"
             : "bg-red-500 hover:bg-red-600 text-white"
         }`}
-        title="Delete Voter Record"
+        title="Delete ID Record"
       >
         {isDeleting ? (
           <Loader2 size={20} className="animate-spin" />
@@ -756,7 +756,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                     isDarkMode ? "text-white" : "text-slate-900"
                   }`}
                 >
-                  Delete Voter Record
+                  Delete ID Record
                 </h3>
               </div>
               <p
@@ -764,8 +764,8 @@ const UserProfile: React.FC<UserProfileProps> = ({
                   isDarkMode ? "text-slate-400" : "text-slate-600"
                 }`}
               >
-                Are you sure you want to delete this voter record? This action
-                cannot be undone. The record for{" "}
+                Are you sure you want to delete this government ID record? This
+                action cannot be undone. The record for{" "}
                 <span className="font-semibold">
                   {formData.FirstName} {formData.LastName}
                 </span>{" "}
