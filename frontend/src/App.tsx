@@ -165,7 +165,7 @@ const App: React.FC = () => {
                       href="#"
                       onClick={alert.bind(
                         null,
-                        "please use homepage to navigate to " + `${item}`
+                        "please use homepage to navigate to " + `${item}`,
                       )}
                       className={`px-4 py-2 text-xs font-medium uppercase tracking-wide rounded-full transition-all duration-300 select-none
                 ${
@@ -176,7 +176,7 @@ const App: React.FC = () => {
                     >
                       {item}
                     </a>
-                  )
+                  ),
                 )}
                 <div
                   className={`w-px h-4 mx-4 ${
@@ -530,9 +530,9 @@ const App: React.FC = () => {
                       isDarkMode ? "text-slate-500" : "text-slate-500"
                     }`}
                   >
-                    The VoteChain India is an autonomous
-                    constitutional authority responsible for administering
-                    credential processes in India.
+                    The CredChain India is an autonomous constitutional
+                    authority responsible for administering credential processes
+                    in India.
                   </p>
                 </div>
                 <div className="md:col-span-2">
@@ -588,7 +588,7 @@ const App: React.FC = () => {
                             {link}
                           </a>
                         </li>
-                      )
+                      ),
                     )}
                   </ul>
                 </div>
