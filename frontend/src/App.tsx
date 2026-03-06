@@ -2,18 +2,7 @@ import "./App.css";
 
 import { useState, useEffect } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
-import {
-  User,
-  ShieldCheck,
-  Vote,
-  Users,
-  Lock,
-  Sun,
-  Moon,
-  ArrowRight,
-  Globe,
-  Activity,
-} from "lucide-react";
+import { User, ShieldCheck, Lock, Sun, Moon, ArrowRight } from "lucide-react";
 import RegistrationSuccess from "./pages/registractionSuccess";
 import UserProfile from "./pages/userProfile";
 import CitizenLogin from "./pages/citizenLogin";
@@ -55,6 +44,14 @@ const App: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
   //const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const { isDarkMode, toggleTheme } = useTheme();
+  const ingestionStats = [
+    { value: "1.3B+", sub: "Aadhaar IDs Issued" },
+    { value: "650M+", sub: "PAN Cards Issued" },
+    { value: "1.5B+", sub: "DigiLocker Documents Issued" },
+    { value: "320M+", sub: "Driving Licenses Issued" },
+    { value: "90%+", sub: "Adult Aadhaar Coverage" },
+    { value: "400M+", sub: "Jan Dhan Bank Accounts" },
+  ];
 
   useEffect(() => {
     const handleScroll = () => {
@@ -158,26 +155,24 @@ const App: React.FC = () => {
               </div>
 
               <div className="hidden md:flex items-center gap-1">
-                {["About", "Credential Services", "Elections", "Media"].map(
-                  (item) => (
-                    <a
-                      key={item}
-                      href="#"
-                      onClick={alert.bind(
-                        null,
-                        "please use homepage to navigate to " + `${item}`,
-                      )}
-                      className={`px-4 py-2 text-xs font-medium uppercase tracking-wide rounded-full transition-all duration-300 select-none
+                {["About", "Credential Services", "Media"].map((item) => (
+                  <a
+                    key={item}
+                    href="#"
+                    onClick={alert.bind(
+                      null,
+                      "please use homepage to navigate to " + `${item}`,
+                    )}
+                    className={`px-4 py-2 text-xs font-medium uppercase tracking-wide rounded-full transition-all duration-300 select-none
                 ${
                   isDarkMode
                     ? "text-slate-400 hover:text-white hover:bg-white/5"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                 }`}
-                    >
-                      {item}
-                    </a>
-                  ),
-                )}
+                  >
+                    {item}
+                  </a>
+                ))}
                 <div
                   className={`w-px h-4 mx-4 ${
                     isDarkMode ? "bg-white/10" : "bg-slate-200"
@@ -262,7 +257,7 @@ const App: React.FC = () => {
                         isDarkMode ? "text-white" : "text-slate-900"
                       }`}
                     >
-                      The Foundation of
+                      Building Digital Trust for
                     </span>
                     <span className="block text-5xl md:text-8xl font-semibold tracking-tighter leading-[0.9]">
                       <span
@@ -273,7 +268,7 @@ const App: React.FC = () => {
                               : "from-orange-600 via-blue-800 to-emerald-600"
                           }`}
                       >
-                        Democracy
+                        Citizens
                       </span>
                     </span>
                   </h1>
@@ -283,8 +278,8 @@ const App: React.FC = () => {
                       isDarkMode ? "text-slate-400" : "text-slate-500"
                     }`}
                   >
-                    A blockchain-based government ID lifecycle event log for the
-                    People of India.
+                    A zero-trust blockchain platform for unified digital
+                    identities per citizen.
                     <span
                       className={
                         isDarkMode ? "text-slate-200" : "text-slate-700"
@@ -329,8 +324,8 @@ const App: React.FC = () => {
                             isDarkMode ? "text-slate-400" : "text-slate-500"
                           }`}
                         >
-                          Access your digital government ID services. Download
-                          your e-ID and keep your details up to date.
+                          Citizen Portal Register, view BID, and link
+                          credentials. Access Services
                         </p>
                         <div className="mt-auto w-full pt-6 border-t border-dashed border-gray-700/20">
                           <button
@@ -391,8 +386,8 @@ const App: React.FC = () => {
                             isDarkMode ? "text-slate-400" : "text-slate-500"
                           }`}
                         >
-                          Secure gateway for Election Officials, Credential
-                          Officers, and Observers. Admin login required.
+                          Administrative Dashboard Secure gateway for
+                          Verification Officers and Auditors. Secure Login
                         </p>
                         <div className="mt-auto w-full pt-6 border-t border-dashed border-gray-700/20">
                           <button
@@ -421,71 +416,73 @@ const App: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                {/* Data Strip */}
+                {/* Data Ingestion Sphere */}
                 <div className="w-full max-w-7xl mx-auto mt-24">
-                  <div
-                    className={`grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x border-y
-                      ${
-                        isDarkMode
-                          ? "border-white/10 divide-white/10"
-                          : "border-slate-200 divide-slate-200"
-                      }`}
-                  >
-                    {[
-                      {
-                        label: "Credential Base",
-                        value: "968M+",
-                        icon: Users,
-                        sub: "Registered Credentials",
-                      },
-                      {
-                        label: "Infrastructure",
-                        value: "1.2M",
-                        icon: Globe,
-                        sub: "Polling Stations",
-                      },
-                      {
-                        label: "Integrity",
-                        value: "100%",
-                        icon: Vote,
-                        sub: "EVM Coverage",
-                      },
-                      {
-                        label: "Participation",
-                        value: "67.4%",
-                        icon: Activity,
-                        sub: "Credential Activity",
-                      },
-                    ].map((stat, idx) => (
-                      <div
-                        key={idx}
-                        className="flex flex-col items-center justify-center py-8 px-4 group cursor-default"
+                  <div className="relative overflow-hidden p-2 md:p-4">
+                    <div className="mb-6 text-center">
+                      <h3
+                        className={`text-xl md:text-2xl font-semibold tracking-tight ${
+                          isDarkMode ? "text-white" : "text-slate-900"
+                        }`}
                       >
+                        National Credential Stream Processing
+                      </h3>
+                      <p
+                        className={`mt-2 text-sm ${
+                          isDarkMode ? "text-slate-400" : "text-slate-500"
+                        }`}
+                      >
+                        Discrete government credential for each citizen linked
+                        reducing fraud and enabling seamless access to services.
+                      </p>
+                    </div>
+
+                    <div className="data-sphere-stage">
+                      {ingestionStats.map((stat, idx) => (
                         <div
-                          className={`mb-3 transition-colors duration-300 ${
-                            isDarkMode
-                              ? "text-slate-600 group-hover:text-slate-400"
-                              : "text-slate-400 group-hover:text-slate-600"
+                          key={stat.sub}
+                          className={`data-node ${
+                            isDarkMode ? "data-node-dark" : "data-node-light"
                           }`}
+                          style={
+                            {
+                              "--i": idx,
+                              "--total": ingestionStats.length,
+                            } as React.CSSProperties
+                          }
                         >
-                          <stat.icon className="w-5 h-5" />
+                          <span
+                            className={`text-xl md:text-2xl font-bold tracking-tight ${
+                              isDarkMode ? "text-white" : "text-slate-900"
+                            }`}
+                          >
+                            {stat.value}
+                          </span>
+                          <span
+                            className={`text-[10px] md:text-xs uppercase tracking-widest font-semibold ${
+                              isDarkMode ? "text-slate-400" : "text-slate-600"
+                            }`}
+                          >
+                            {stat.sub}
+                          </span>
                         </div>
+                      ))}
+
+                      <div
+                        className={`data-core ${
+                          isDarkMode ? "data-core-dark" : "data-core-light"
+                        }`}
+                      >
+                        <div className="data-core-ring"></div>
                         <span
-                          className={`text-3xl font-bold tracking-tighter mb-1 transition-colors duration-300 ${
-                            isDarkMode ? "text-white" : "text-slate-900"
+                          className={`text-xs md:text-sm font-semibold tracking-[0.18em] uppercase ${
+                            isDarkMode ? "text-slate-200" : "text-slate-700"
                           }`}
                         >
-                          {stat.value}
-                        </span>
-                        <span
-                          className={`text-[10px] uppercase tracking-widest font-semibold ${
-                            isDarkMode ? "text-slate-500" : "text-slate-500"
-                          }`}
-                        >
-                          {stat.sub}
+                          CredChain Core
                         </span>
                       </div>
-                    ))}
+                    </div>
                   </div>
                 </div>
               </div>
