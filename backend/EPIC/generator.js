@@ -24,11 +24,11 @@ function generateDistrictID(input) {
     randomNumber === ""
   ) {
     throw new Error(
-      "All fields are required: districtId (number), state (string), and randomNumber"
+      "All fields are required: districtId (number), state (string), and randomNumber",
     );
   }
 
-  // Convert all inputs to strings and normalize
+  // Convert all inputs to strings and normalize by trimming and uppercasing where appropriate
   const normalizedDistrict = String(districtId).trim();
   const normalizedState = String(state).replace(/\s+/g, "").toUpperCase();
   const normalizedRandom = String(randomNumber).trim();
@@ -251,8 +251,8 @@ if (require.main === module) {
     if (result.success) {
       console.log(
         `Entry ${index + 1}: ${result.id} (Prefix: ${getPrefixFromID(
-          result.id
-        )})`
+          result.id,
+        )})`,
       );
     } else {
       console.log(`Entry ${index + 1}: Error - ${result.error}`);

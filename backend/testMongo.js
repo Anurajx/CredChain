@@ -1,5 +1,5 @@
 const { MongoClient } = require("mongodb");
-
+//test file to check if we can connect to the database and read from it, not used in production
 const uri = "";
 
 async function test() {

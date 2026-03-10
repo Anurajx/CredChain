@@ -1,4 +1,5 @@
 const crypto = require("crypto");
+//this file contains the logic to generate a unique code based on the user's ID number, date of birth, and a secret code. The generated code is deterministic, meaning the same inputs will always produce the same output, and it is designed to be unique across different users. The code format is a single letter representing the ID type followed by 15 digits, ensuring a total length of 16 characters.
 
 /**
  * ID Type prefix mapping
@@ -34,7 +35,7 @@ function generateUniqueCode(input) {
     secretCode === ""
   ) {
     throw new Error(
-      "All fields are required: idNumber, dateOfBirth, and secretCode"
+      "All fields are required: idNumber, dateOfBirth, and secretCode",
     );
   }
 
@@ -257,7 +258,7 @@ if (require.main === module) {
   batchResults.forEach((result, index) => {
     console.log(
       `User ${index + 1}:`,
-      result.success ? result.code : result.error
+      result.success ? result.code : result.error,
     );
   });
 }

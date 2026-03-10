@@ -25,7 +25,7 @@ const DB = mongoose.createConnection(process.env.MONGO_URI, {
 DB.once("open", () => console.log("Connected to StateVoter"));
 
 /* -----------------------------------
-   SCHEMA (Flexible)
+   SCHEMA 
 ----------------------------------- */
 
 const voterSchema = new mongoose.Schema({}, { strict: false });
@@ -237,7 +237,7 @@ app.put("/update/:id", async (req, res) => {
     //find the field and update it in stateDB
     { ID: req.params.id },
     req.body,
-    { new: true }
+    { new: true },
   );
 
   //BLOCKCHAIN UPDATE LOGIC HERE
@@ -277,5 +277,5 @@ app.delete("/delete/:id", async (req, res) => {
 ----------------------------------- */
 
 app.listen(process.env.PORT, () =>
-  console.log("Server running on port " + process.env.PORT)
+  console.log("Server running on port " + process.env.PORT),
 );
