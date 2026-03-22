@@ -184,6 +184,37 @@ export default function BLOPortal() {
   const [showCredentialPulse, setShowCredentialPulse] = useState(false);
   const [auditTrail, setAuditTrail] = useState<any[]>([]);
   const [auditLoading, setAuditLoading] = useState(false);
+  const [confidence, setConfidence] = useState<{ score: number; breakdown?: any } | null>(null);
+  const [confidenceLoading, setConfidenceLoading] = useState(false);
+  const [confidenceMessage, setConfidenceMessage] = useState("");
+
+  const computeConfidenceFallback = (voter: any, auditTrail: any[]) => {
+    const linkedCount = Array.isArray(voter?.LinkedCredentials)
+      ? voter.LinkedCredentials.length
+      : 0;
+    const creationCount = (auditTrail || []).filter(
+      (e) => e?.TYPE === "CREATION"
+    ).length;
+    const updateCount = (auditTrail || []).filter(
+      (e) => e?.TYPE === "UPDATION" && e?.CREDENTIAL_TYPE === "PROFILE"
+    ).length;
+
+    let score =
+      5 +
+      Math.min(linkedCount, 4) * 1 +
+      (creationCount > 0 ? 1 : 0) -
+      Math.min(updateCount, 10) * 0.2;
+    score = Math.max(0, Math.min(10, Number(score.toFixed(2))));
+
+    return {
+      score,
+      breakdown: {
+        linkedCredentials: linkedCount,
+        creationEvents: creationCount,
+        profileUpdates: updateCount,
+      },
+    };
+  };
 
   // --- Actions ---
 
@@ -403,6 +434,49 @@ export default function BLOPortal() {
       setAuditTrail([]);
     } finally {
       setAuditLoading(false);
+    }
+  };
+
+  const handleFetchConfidence = async () => {
+    const normalizedUvid = credentialUVID.trim();
+    if (!normalizedUvid) return;
+    setConfidenceLoading(true);
+    setConfidenceMessage("");
+    try {
+      const response = await fetch(apiUrl(`/confidence/${encodeURIComponent(normalizedUvid)}`));
+      const data = await response.json().catch(() => ({}));
+      if (response.ok) {
+        setConfidence({ score: data.score, breakdown: data.breakdown });
+        setConfidenceMessage(`Score generated for UVID: ${data.ID}`);
+      } else {
+        // Fallback: derive score from existing endpoints if confidence API is unavailable
+        const [voterRes, auditRes] = await Promise.all([
+          fetch(apiUrl(`/voters/${encodeURIComponent(normalizedUvid)}`)),
+          fetch(apiUrl(`/get-audit-trail/${encodeURIComponent(normalizedUvid)}`)),
+        ]);
+
+        if (!voterRes.ok) {
+          const err = await voterRes.json().catch(() => ({}));
+          throw new Error(err?.message || data?.message || "Unable to generate score.");
+        }
+
+        const voterData = await voterRes.json().catch(() => ({}));
+        const auditData = await auditRes.json().catch(() => []);
+        const fallback = computeConfidenceFallback(voterData, Array.isArray(auditData) ? auditData : []);
+        setConfidence(fallback);
+        setConfidenceMessage(
+          "Score generated using fallback calculation (confidence API unavailable on current backend)."
+        );
+      }
+    } catch (err) {
+      setConfidence(null);
+      setConfidenceMessage(
+        err instanceof Error
+          ? err.message
+          : "Network error while generating confidence score."
+      );
+    } finally {
+      setConfidenceLoading(false);
     }
   };
 
@@ -631,6 +705,13 @@ export default function BLOPortal() {
           >
             View Audit Trail
           </button>
+          <button
+            type="button"
+            onClick={handleFetchConfidence}
+            className="rounded-md bg-emerald-600 py-2 px-3 text-sm font-semibold text-white"
+          >
+            {confidenceLoading ? "Scoring..." : "Get Confidence Score"}
+          </button>
           {showCredentialPulse && (
             <div className="md:col-span-5 rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 animate-pulse">
               Credential linked successfully.
@@ -662,6 +743,34 @@ export default function BLOPortal() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+
+        <div
+          className={`mb-8 rounded-xl border p-4 ${
+            isDarkMode ? "border-white/10 bg-white/5" : "border-gray-200 bg-white"
+          }`}
+        >
+          <div className="text-sm font-semibold mb-3">Confidence Score</div>
+          {confidence ? (
+            <div className="flex items-center gap-4">
+              <div className="text-lg font-bold">
+                {confidence.score} / 10
+              </div>
+              <div className="text-xs opacity-80">
+                Linked: {confidence.breakdown?.linkedCredentials ?? 0} • Updates:{" "}
+                {confidence.breakdown?.profileUpdates ?? 0}
+              </div>
+            </div>
+          ) : (
+            <div className="text-xs opacity-70">
+              Enter UVID above and click "Get Confidence Score" to calculate.
+            </div>
+          )}
+          {confidenceMessage && (
+            <div className={`mt-3 text-xs ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>
+              {confidenceMessage}
             </div>
           )}
         </div>

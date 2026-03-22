@@ -7,6 +7,7 @@ const { generateUniqueCode, IDType } = require("./UVID/generator");
 const { EPICgenerator, generateDistrictID } = require("./EPIC/generator");
 const Blockchain = require("./Blockchain/Blockchain"); // or correct path
 const blockchain = new Blockchain();
+const { computeConfidenceScore } = require("./models/confidence");
 
 require("dotenv").config();
 
@@ -391,6 +392,25 @@ app.get("/get-audit-trail", (req, res) => {
   res.json(history);
 });
 
+// Confidence score for a UVID
+app.get("/confidence/:id", async (req, res) => {
+  try {
+    const requestedId = (req.params.id || "").trim();
+    const voter = await StateVoter.findOne({
+      ID: { $regex: `^${requestedId}$`, $options: "i" },
+    }).lean();
+    if (!voter) return res.status(404).json({ message: "Citizen/UVID not found" });
+    const auditTrail = blockchain.getAuditTrail(voter.ID);
+    const result = computeConfidenceScore({ voter, auditTrail });
+    res.json({
+      ID: voter.ID,
+      ...result,
+    });
+  } catch (error) {
+    console.error("Confidence score error:", error);
+    res.status(500).json({ message: "Failed to compute confidence score" });
+  }
+});
 // Tamper check: compare DB snapshot hash with latest on-chain hash
 app.get("/tamper-check/:id", async (req, res) => {
   try {
