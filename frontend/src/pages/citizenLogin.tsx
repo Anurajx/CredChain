@@ -206,7 +206,7 @@ const LoginForm: React.FC<{
             : "bg-white/90 border-slate-200"
         }`}
       >
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-600 to-orange-400"></div>
+        <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-tr from-orange-600 to-orange-400"></div>
 
         <div className="text-center mb-8">
           <div
@@ -309,7 +309,7 @@ const LoginForm: React.FC<{
             disabled={status === "loading"}
             className={`w-full py-3 rounded-lg font-bold tracking-wide transition-all duration-300 flex items-center justify-center gap-2 shadow-lg
               ${status === "loading" ? "opacity-70 cursor-wait" : ""}
-              bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-500 hover:to-orange-400 text-white shadow-orange-900/20`}
+              bg-linear-to-tr from-orange-600 to-orange-500 hover:from-orange-500 hover:to-orange-400 text-white shadow-orange-900/20`}
           >
             {status === "loading" ? (
               <span className="animate-pulse">Authenticating...</span>
@@ -343,6 +343,62 @@ const RegistrationForm: React.FC<{
   isDarkMode: boolean;
   setCurrentView: (view: ViewState) => void;
 }> = ({ navigate, isDarkMode, setCurrentView }) => {
+  const INDIAN_STATES_AND_UTS: string[] = [
+    "Andhra Pradesh",
+    "Arunachal Pradesh",
+    "Assam",
+    "Bihar",
+    "Chhattisgarh",
+    "Goa",
+    "Gujarat",
+    "Haryana",
+    "Himachal Pradesh",
+    "Jharkhand",
+    "Karnataka",
+    "Kerala",
+    "Madhya Pradesh",
+    "Maharashtra",
+    "Manipur",
+    "Meghalaya",
+    "Mizoram",
+    "Nagaland",
+    "Odisha",
+    "Punjab",
+    "Rajasthan",
+    "Sikkim",
+    "Tamil Nadu",
+    "Telangana",
+    "Tripura",
+    "Uttar Pradesh",
+    "Uttarakhand",
+    "West Bengal",
+    "Andaman and Nicobar Islands",
+    "Chandigarh",
+    "Dadra and Nagar Haveli and Daman and Diu",
+    "Delhi",
+    "Jammu and Kashmir",
+    "Ladakh",
+    "Lakshadweep",
+    "Puducherry",
+  ];
+
+  const calcAgeFromDOB = (dob: string) => {
+    // expects YYYY-MM-DD from <input type="date" />
+    if (!dob) return "";
+    const parts = dob.split("-");
+    if (parts.length !== 3) return "";
+    const [yyyy, mm, dd] = parts.map((p) => Number(p));
+    if (!yyyy || !mm || !dd) return "";
+
+    const birth = new Date(yyyy, mm - 1, dd);
+    const now = new Date();
+    let age = now.getFullYear() - birth.getFullYear();
+    const m = now.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age -= 1;
+    if (Number.isNaN(age) || age < 0) return "";
+    return String(age);
+  };
+
   const [formData, setFormData] = useState<RegistrationData>({
     id: "",
     IDtype: "",
@@ -365,7 +421,13 @@ const RegistrationForm: React.FC<{
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === "birthday") {
+      const nextAge = calcAgeFromDOB(value);
+      setFormData({ ...formData, birthday: value, age: nextAge });
+      return;
+    }
+    setFormData({ ...formData, [name]: value });
   };
 
   const payload = {
@@ -443,7 +505,7 @@ const RegistrationForm: React.FC<{
       </button>
 
       <div className={`relative overflow-visible px-4 sm:px-8 md:px-12 lg:px-16 py-8 md:py-10 ${isDarkMode ? "" : ""}`}>
-        <div className="w-full h-1 bg-gradient-to-r from-[#FF9933] via-white to-[#138808] mb-6"></div>
+        <div className="w-full h-1 bg-linear-to-tr from-[#FF9933] via-white to-[#138808] mb-6"></div>
 
         <div className="text-center mb-10">
           <div className="mb-5">
@@ -483,7 +545,7 @@ const RegistrationForm: React.FC<{
         >
           <ShieldCheck className="w-4 h-4 mt-0.5 shrink-0" />
           <span>
-            This is an official government-style onboarding form. Your UVID is generated securely by backend after approval.
+            Register for new UVID using your Government ID. Your UVID is generated securely by backend after approval.
           </span>
         </div>
 
@@ -672,7 +734,8 @@ const RegistrationForm: React.FC<{
                 onChange={handleChange}
                 className={inputClasses}
                 placeholder="Age"
-                required
+                disabled
+                required={false}
               />
               <Activity className={iconClasses} />
             </div>
@@ -702,15 +765,22 @@ const RegistrationForm: React.FC<{
           <div className="space-y-1">
             <label className={labelClasses}>State</label>
             <div className="relative group">
-              <input
+              <select
                 name="state"
-                type="text"
                 value={formData.state}
                 onChange={handleChange}
-                className={inputClasses}
-                placeholder="State Name"
+                className={`${inputClasses} appearance-none cursor-pointer`}
                 required
-              />
+              >
+                <option value="" disabled>
+                  Select State / UT
+                </option>
+                {INDIAN_STATES_AND_UTS.map((st) => (
+                  <option key={st} value={st}>
+                    {st}
+                  </option>
+                ))}
+              </select>
               <Globe className={iconClasses} />
             </div>
           </div>
@@ -768,7 +838,7 @@ const RegistrationForm: React.FC<{
               disabled={status === "loading"}
               className={`w-full py-3 rounded-lg font-bold tracking-wide transition-all duration-300 flex items-center justify-center gap-2 shadow-lg
                 ${status === "loading" ? "opacity-70 cursor-wait" : ""}
-                bg-gradient-to-r from-[#000080] to-blue-700 hover:from-blue-700 hover:to-[#000080] text-white shadow-blue-900/20`}
+                bg-linear-to-tr from-[#000080] to-blue-700 hover:from-blue-700 hover:to-[#000080] text-white shadow-blue-900/20`}
             >
               {status === "loading" ? (
                 <span className="animate-pulse">Submitting Form...</span>

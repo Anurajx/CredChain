@@ -43,6 +43,65 @@ const UpdateVoter = DB.model("Voter", voterSchema, "toUpdate");
    ROUTES
 ----------------------------------- */
 
+// Get state-wise statistics
+app.get("/api/state-stats", async (req, res) => {
+  try {
+    // Additions: count approved voters per state
+    const additionsData = await StateVoter.aggregate([
+      { $group: { _id: "$State", count: { $sum: 1 } } }
+    ]);
+
+    // Updations: count pending update requests per state
+    const updationsData = await UpdateVoter.aggregate([
+      { $group: { _id: "$State", count: { $sum: 1 } } }
+    ]);
+
+    // Duplications: find IDs that exist in BOTH TempVoter and StateVoter (same UVID = duplicate attempt)
+    const tempVoters = await TempVoter.find({}, { ID: 1, State: 1, _id: 0 }).lean();
+    const stateVoterIds = new Set(
+      (await StateVoter.find({}, { ID: 1, _id: 0 }).lean()).map((v) => v.ID)
+    );
+
+    // Count duplicates grouped by state
+    const dupsByState = {};
+    for (const tv of tempVoters) {
+      if (tv.ID && stateVoterIds.has(tv.ID)) {
+        const state = tv.State || "Unknown";
+        dupsByState[state] = (dupsByState[state] || 0) + 1;
+      }
+    }
+    const duplicationsData = Object.entries(dupsByState).map(([state, count]) => ({
+      _id: state,
+      count,
+    }));
+
+    const statsByState = {};
+    const mergeStats = (data, key) => {
+      data.forEach((item) => {
+        const stateName = item._id || "Unknown";
+        if (!statsByState[stateName]) {
+          statsByState[stateName] = {
+            State: stateName,
+            additions: 0,
+            updations: 0,
+            duplications: 0,
+          };
+        }
+        statsByState[stateName][key] = item.count;
+      });
+    };
+
+    mergeStats(additionsData, "additions");
+    mergeStats(updationsData, "updations");
+    mergeStats(duplicationsData, "duplications");
+
+    res.json(Object.values(statsByState));
+  } catch (error) {
+    console.error("State stats error:", error);
+    res.status(500).json({ message: "Failed to fetch state statistics" });
+  }
+});
+
 // Get all verified voters
 app.get("/voters", async (req, res) => {
   const page = parseInt(req.query.page) || 1;

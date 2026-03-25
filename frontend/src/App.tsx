@@ -10,6 +10,7 @@ import Administrative from "./pages/administrative";
 import BLOPortal from "./pages/bloPortal";
 import AuditTrail from "./pages/auditTrail";
 import FuzzyDetection from "./pages/fuzzyDetection";
+import IndiaMapPage from "./pages/indiaMapPage";
 import { useTheme } from "./contexts/ThemeContext";
 //import { SignInButton, SignUpButton } from "@clerk/clerk-react";
 
@@ -44,6 +45,7 @@ const App: React.FC = () => {
   const isBloPortal = location.pathname === "/blo-portal";
   const isAuditTrail = location.pathname === "/audit-trail";
   const isFuzzyDetection = location.pathname === "/fuzzy-detection";
+  const isIndiaMap = location.pathname === "/india-map";
 
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
   //const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
@@ -90,7 +92,8 @@ const App: React.FC = () => {
         !isAdministrative &&
         !isBloPortal &&
         !isAuditTrail &&
-        !isFuzzyDetection && (
+        !isFuzzyDetection &&
+        !isIndiaMap && (
           <div className="fixed inset-0 z-0 pointer-events-none">
             <div
               className={`absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:4rem_4rem] 
@@ -118,7 +121,8 @@ const App: React.FC = () => {
         !isAdministrative &&
         !isBloPortal &&
         !isAuditTrail &&
-        !isFuzzyDetection && (
+        !isFuzzyDetection &&
+        !isIndiaMap && (
           <nav
             className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 border-b border-transparent
           ${
@@ -189,6 +193,19 @@ const App: React.FC = () => {
                     {item}
                   </a>
                 ))}
+                
+                <button
+                  onClick={() => navigate("/india-map")}
+                  className={`px-4 py-2 text-xs font-bold uppercase tracking-wide rounded-full transition-all duration-300 select-none
+                ${
+                  isDarkMode
+                    ? "text-blue-400 hover:text-white bg-blue-500/10 hover:bg-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.2)]"
+                    : "text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 shadow-[0_0_10px_rgba(59,130,246,0.3)]"
+                }`}
+                >
+                  National Dashboard
+                </button>
+
                 <div
                   className={`w-px h-4 mx-4 ${
                     isDarkMode ? "bg-white/10" : "bg-slate-200"
@@ -237,6 +254,7 @@ const App: React.FC = () => {
         <Route path="/blo-portal" element={<BLOPortal />} />
         <Route path="/audit-trail" element={<AuditTrail />} />
         <Route path="/fuzzy-detection" element={<FuzzyDetection />} />
+        <Route path="/india-map" element={<IndiaMapPage />} />
         <Route
           path="/*"
           element={
@@ -564,7 +582,8 @@ const App: React.FC = () => {
         !isAdministrative &&
         !isBloPortal &&
         !isAuditTrail &&
-        !isFuzzyDetection && (
+        !isFuzzyDetection &&
+        !isIndiaMap && (
           <footer
             className={`relative z-10 border-t ${
               isDarkMode
