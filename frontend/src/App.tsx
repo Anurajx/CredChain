@@ -97,6 +97,7 @@ const App: React.FC = () => {
         !isAuditTrail &&
         !isFuzzyDetection &&
         !isIndiaMap &&
+        !isRegionalHeatmap &&
         !isCitizenCard && (
           <div className="fixed inset-0 z-0 pointer-events-none">
             <div
@@ -118,13 +119,12 @@ const App: React.FC = () => {
 
       {/* --- HEADER --- */}
       {!isRegistrationSuccess &&
-        !isUserProfile &&
-        !isCitizenPortal &&
-        !isAdministrative &&
-        !isBloPortal &&
-        !isAuditTrail &&
-        !isFuzzyDetection &&
-        !isIndiaMap &&
+        // !isUserProfile &&
+        // !isCitizenPortal &&
+        // !isAdministrative &&
+        // !isBloPortal &&
+        // !isAuditTrail &&
+        // !isFuzzyDetection &&
         !isCitizenCard && (
           <nav
             className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 border-b border-transparent
