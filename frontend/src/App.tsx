@@ -11,6 +11,7 @@ import BLOPortal from "./pages/bloPortal";
 import AuditTrail from "./pages/auditTrail";
 import FuzzyDetection from "./pages/fuzzyDetection";
 import IndiaMapPage from "./pages/indiaMapPage";
+import RegionalHeatmap from "./pages/RegionalHeatmap";
 import CitizenCardPage from "./pages/CitizenCardPage";
 import { useTheme } from "./contexts/ThemeContext";
 //import { SignInButton, SignUpButton } from "@clerk/clerk-react";
@@ -47,6 +48,7 @@ const App: React.FC = () => {
   const isAuditTrail = location.pathname === "/audit-trail";
   const isFuzzyDetection = location.pathname === "/fuzzy-detection";
   const isIndiaMap = location.pathname === "/india-map";
+  const isRegionalHeatmap = location.pathname === "/regional-heatmap";
   const isCitizenCard = location.pathname.startsWith("/citizen-card");
 
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
@@ -81,11 +83,10 @@ const App: React.FC = () => {
   return (
     <div
       className={`min-h-screen font-sans antialiased selection:bg-orange-500 selection:text-white transition-colors duration-700 ease-in-out flex flex-col
-      ${
-        isDarkMode
+      ${isDarkMode
           ? "bg-[#0a0a0c] text-slate-200"
           : "bg-[#f8f9fa] text-slate-900"
-      }`}
+        }`}
     >
       {/* --- BACKGROUND --- */}
       {!isRegistrationSuccess &&
@@ -96,46 +97,43 @@ const App: React.FC = () => {
         !isAuditTrail &&
         !isFuzzyDetection &&
         !isIndiaMap &&
+        !isRegionalHeatmap &&
         !isCitizenCard && (
           <div className="fixed inset-0 z-0 pointer-events-none">
             <div
               className={`absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:4rem_4rem] 
-          ${
-            isDarkMode
-              ? "[mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"
-              : "[mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_80%,transparent_100%)]"
-          }`}
+          ${isDarkMode
+                  ? "[mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"
+                  : "[mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_80%,transparent_100%)]"
+                }`}
             />
             <div
               className={`absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[400px] opacity-20 blur-[120px] rounded-full pointer-events-none
-          ${
-            isDarkMode
-              ? "bg-gradient-to-b from-blue-900/40 via-purple-900/10 to-transparent"
-              : "bg-gradient-to-b from-blue-200/60 via-purple-100/40 to-transparent"
-          }`}
+          ${isDarkMode
+                  ? "bg-gradient-to-b from-blue-900/40 via-purple-900/10 to-transparent"
+                  : "bg-gradient-to-b from-blue-200/60 via-purple-100/40 to-transparent"
+                }`}
             />
           </div>
         )}
 
       {/* --- HEADER --- */}
       {!isRegistrationSuccess &&
-        !isUserProfile &&
-        !isCitizenPortal &&
-        !isAdministrative &&
-        !isBloPortal &&
-        !isAuditTrail &&
-        !isFuzzyDetection &&
-        !isIndiaMap &&
+        // !isUserProfile &&
+        // !isCitizenPortal &&
+        // !isAdministrative &&
+        // !isBloPortal &&
+        // !isAuditTrail &&
+        // !isFuzzyDetection &&
         !isCitizenCard && (
           <nav
             className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 border-b border-transparent
-          ${
-            isScrolled
-              ? isDarkMode
-                ? "bg-[#0a0a0c]/80 border-white/5 backdrop-blur-xl py-4"
-                : "bg-white/80 border-slate-200/50 backdrop-blur-xl py-4"
-              : "py-6"
-          }`}
+          ${isScrolled
+                ? isDarkMode
+                  ? "bg-[#0a0a0c]/80 border-white/5 backdrop-blur-xl py-4"
+                  : "bg-white/80 border-slate-200/50 backdrop-blur-xl py-4"
+                : "py-6"
+              }`}
           >
             <div className="container mx-auto px-6 max-w-7xl flex justify-between items-center">
               <div
@@ -144,34 +142,31 @@ const App: React.FC = () => {
               >
                 <div
                   className={`relative w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden transition-all duration-500 
-              ${
-                isDarkMode
-                  ? "bg-white/5 border border-white/10 group-hover:border-white/20"
-                  : "bg-white border border-slate-200 shadow-sm"
-              }`}
+              ${isDarkMode
+                      ? "bg-white/5 border border-white/10 group-hover:border-white/20"
+                      : "bg-white border border-slate-200 shadow-sm"
+                    }`}
                 >
                   <img
                     src="./logo.webp"
                     alt="Logo"
-                    // className={`w-6 h-6 object-contain transition-all duration-500 ${
-                    //   isDarkMode
-                    //     ? "invert brightness-0 opacity-90"
-                    //     : "brightness-0 opacity-80"
-                    // }`}
+                  // className={`w-6 h-6 object-contain transition-all duration-500 ${
+                  //   isDarkMode
+                  //     ? "invert brightness-0 opacity-90"
+                  //     : "brightness-0 opacity-80"
+                  // }`}
                   />
                 </div>
                 <div className="flex flex-col">
                   <span
-                    className={`text-sm font-bold tracking-wider uppercase leading-none mb-1 ${
-                      isDarkMode ? "text-white" : "text-slate-900"
-                    }`}
+                    className={`text-sm font-bold tracking-wider uppercase leading-none mb-1 ${isDarkMode ? "text-white" : "text-slate-900"
+                      }`}
                   >
                     CredChain
                   </span>
                   <span
-                    className={`text-[10px] font-medium tracking-[0.2em] uppercase leading-none ${
-                      isDarkMode ? "text-slate-500" : "text-slate-500"
-                    }`}
+                    className={`text-[10px] font-medium tracking-[0.2em] uppercase leading-none ${isDarkMode ? "text-slate-500" : "text-slate-500"
+                      }`}
                   >
                     Government of India
                   </span>
@@ -188,41 +183,47 @@ const App: React.FC = () => {
                       "please use homepage to navigate to " + `${item}`,
                     )}
                     className={`px-4 py-2 text-xs font-medium uppercase tracking-wide rounded-full transition-all duration-300 select-none
-                ${
-                  isDarkMode
-                    ? "text-slate-400 hover:text-white hover:bg-white/5"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                }`}
+                ${isDarkMode
+                        ? "text-slate-400 hover:text-white hover:bg-white/5"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                      }`}
                   >
                     {item}
                   </a>
                 ))}
-                
+
                 <button
                   onClick={() => navigate("/india-map")}
                   className={`px-4 py-2 text-xs font-bold uppercase tracking-wide rounded-full transition-all duration-300 select-none
-                ${
-                  isDarkMode
-                    ? "text-blue-400 hover:text-white bg-blue-500/10 hover:bg-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.2)]"
-                    : "text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 shadow-[0_0_10px_rgba(59,130,246,0.3)]"
-                }`}
+                ${isDarkMode
+                      ? "text-blue-400 hover:text-white bg-blue-500/10 hover:bg-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.2)]"
+                      : "text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 shadow-[0_0_10px_rgba(59,130,246,0.3)]"
+                    }`}
                 >
                   National Dashboard
                 </button>
 
+                <button
+                  onClick={() => navigate('/regional-heatmap')}
+                  className={`px-4 py-2 text-xs font-medium uppercase tracking-wide rounded-full transition-all duration-300 select-none
+                ${isDarkMode
+                      ? "text-orange-400 hover:text-orange-300 hover:bg-orange-500/10"
+                      : "text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                    }`}
+                >
+                  HeatMap
+                </button>
                 <div
-                  className={`w-px h-4 mx-4 ${
-                    isDarkMode ? "bg-white/10" : "bg-slate-200"
-                  }`}
+                  className={`w-px h-4 mx-4 ${isDarkMode ? "bg-white/10" : "bg-slate-200"
+                    }`}
                 ></div>
                 <button
                   onClick={toggleTheme}
                   className={`p-2 rounded-full transition-all duration-300 
-              ${
-                isDarkMode
-                  ? "text-slate-400 hover:text-amber-400 hover:bg-white/5"
-                  : "text-slate-500 hover:text-amber-500 hover:bg-slate-100"
-              }`}
+              ${isDarkMode
+                      ? "text-slate-400 hover:text-amber-400 hover:bg-white/5"
+                      : "text-slate-500 hover:text-amber-500 hover:bg-slate-100"
+                    }`}
                 >
                   {isDarkMode ? (
                     <Sun className="w-4 h-4" />
@@ -250,23 +251,24 @@ const App: React.FC = () => {
         )}
 
       {/* --- MAIN CONTENT AREA --- */}
-      <Routes>
-        <Route path="/registration-success" element={<RegistrationSuccess />} />
-        <Route path="/user-profile" element={<UserProfileWrapper />} />
-        <Route path="/citizen-portal" element={<CitizenLogin />} />
-        <Route path="/administrative" element={<Administrative />} />
-        <Route path="/blo-portal" element={<BLOPortal />} />
-        <Route path="/audit-trail" element={<AuditTrail />} />
-        <Route path="/fuzzy-detection" element={<FuzzyDetection />} />
-        <Route path="/india-map" element={<IndiaMapPage />} />
-        <Route path="/citizen-card/:id" element={<CitizenCardPage />} />
-        <Route
-          path="/*"
-          element={
-            <main className="relative z-10 pt-40 pb-20 flex-grow flex flex-col justify-center">
-              <div className="container mx-auto px-6 max-w-7xl animate-in fade-in duration-700">
-                <div className="flex flex-col items-center text-center">
-                  {/* <div
+      <div className="flex-grow pt-24">
+        <Routes>
+          <Route path="/registration-success" element={<RegistrationSuccess />} />
+          <Route path="/user-profile" element={<UserProfileWrapper />} />
+          <Route path="/citizen-portal" element={<CitizenLogin />} />
+          <Route path="/administrative" element={<Administrative />} />
+          <Route path="/blo-portal" element={<BLOPortal />} />
+          <Route path="/audit-trail" element={<AuditTrail />} />
+          <Route path="/fuzzy-detection" element={<FuzzyDetection />} />
+          <Route path="/india-map" element={<IndiaMapPage />} />
+          <Route path="/regional-heatmap" element={<RegionalHeatmap />} />
+          <Route
+            path="/*"
+            element={
+              <main className="relative z-10 pt-40 pb-20 flex-grow flex flex-col justify-center">
+                <div className="container mx-auto px-6 max-w-7xl animate-in fade-in duration-700">
+                  <div className="flex flex-col items-center text-center">
+                    {/* <div
                       className={`flex items-center gap-3 px-4 py-1.5 rounded-full border mb-10 backdrop-blur-md transition-colors duration-300
                       ${
                         isDarkMode
@@ -292,293 +294,268 @@ const App: React.FC = () => {
                       ></div>
                     </div> */}
 
-                  <h1 className="max-w-5xl mx-auto mb-8">
-                    <span
-                      className={`block text-5xl md:text-8xl font-semibold tracking-tighter leading-[0.9] mb-2 ${
-                        isDarkMode ? "text-white" : "text-slate-900"
-                      }`}
-                    >
-                      Building Digital Trust for
-                    </span>
-                    <span className="block text-5xl md:text-8xl font-semibold tracking-tighter leading-[0.9]">
+                    <h1 className="max-w-5xl mx-auto mb-8">
                       <span
-                        className={`text-transparent bg-clip-text bg-gradient-to-r opacity-90 
-                          ${
-                            isDarkMode
+                        className={`block text-5xl md:text-8xl font-semibold tracking-tighter leading-[0.9] mb-2 ${isDarkMode ? "text-white" : "text-slate-900"
+                          }`}
+                      >
+                        Building Digital Trust for
+                      </span>
+                      <span className="block text-5xl md:text-8xl font-semibold tracking-tighter leading-[0.9]">
+                        <span
+                          className={`text-transparent bg-clip-text bg-gradient-to-r opacity-90 
+                          ${isDarkMode
                               ? "from-orange-500 via-white to-emerald-500"
                               : "from-orange-600 via-blue-800 to-emerald-600"
-                          }`}
-                      >
-                        Citizens
+                            }`}
+                        >
+                          Citizens
+                        </span>
                       </span>
-                    </span>
-                  </h1>
+                    </h1>
 
-                  <p
-                    className={`text-lg md:text-xl max-w-2xl mx-auto leading-relaxed font-light mb-16 ${
-                      isDarkMode ? "text-slate-400" : "text-slate-500"
-                    }`}
-                  >
-                    A zero-trust blockchain platform for unified digital
-                    identities per citizen.
-                    <span
-                      className={
-                        isDarkMode ? "text-slate-200" : "text-slate-700"
-                      }
+                    <p
+                      className={`text-lg md:text-xl max-w-2xl mx-auto leading-relaxed font-light mb-16 ${isDarkMode ? "text-slate-400" : "text-slate-500"
+                        }`}
                     >
-                      {" "}
-                      Secure. Transparent. Immutable.
-                    </span>
-                  </p>
+                      A zero-trust blockchain platform for unified digital
+                      identities per citizen.
+                      <span
+                        className={
+                          isDarkMode ? "text-slate-200" : "text-slate-700"
+                        }
+                      >
+                        {" "}
+                        Secure. Transparent. Immutable.
+                      </span>
+                    </p>
 
-                  <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
-                    {/* Voter Portal Button */}
-                    <div
-                      className={`group relative overflow-hidden rounded-2xl border transition-all duration-500 hover:shadow-2xl
-                        ${
-                          isDarkMode
+                    <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+                      {/* Voter Portal Button */}
+                      <div
+                        className={`group relative overflow-hidden rounded-2xl border transition-all duration-500 hover:shadow-2xl
+                        ${isDarkMode
                             ? "bg-[#0f0f11] border-white/10 hover:border-orange-500/30"
                             : "bg-white border-slate-200 hover:border-orange-200 shadow-sm"
-                        }`}
-                    >
-                      <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-orange-600 to-orange-400 opacity-80"></div>
-                      <div className="p-8 md:p-10 flex flex-col h-full items-start text-left">
-                        <div
-                          className={`mb-6 p-3 rounded-xl inline-flex items-center justify-center transition-colors duration-300
-                            ${
-                              isDarkMode
+                          }`}
+                      >
+                        <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-orange-600 to-orange-400 opacity-80"></div>
+                        <div className="p-8 md:p-10 flex flex-col h-full items-start text-left">
+                          <div
+                            className={`mb-6 p-3 rounded-xl inline-flex items-center justify-center transition-colors duration-300
+                            ${isDarkMode
                                 ? "bg-orange-500/10 text-orange-400"
                                 : "bg-orange-50 text-orange-600"
-                            }`}
-                        >
-                          <User className="w-6 h-6" strokeWidth={1.5} />
-                        </div>
-                        <h3
-                          className={`text-2xl font-semibold tracking-tight mb-3 ${
-                            isDarkMode ? "text-white" : "text-slate-900"
-                          }`}
-                        >
-                          Citizen Portal
-                        </h3>
-                        <p
-                          className={`text-sm leading-relaxed mb-10 max-w-sm ${
-                            isDarkMode ? "text-slate-400" : "text-slate-500"
-                          }`}
-                        >
-                          Citizen Portal Register, view UVID, and link
-                          credentials. Access Services
-                        </p>
-                        <div className="mt-auto w-full pt-6 border-t border-dashed border-gray-700/20">
-                          <button
-                            onClick={() => navigate("/citizen-portal")}
-                            className={`group/btn w-full py-3 px-0 flex items-center justify-between text-sm font-semibold tracking-wide transition-all
-                              ${
-                                isDarkMode
+                              }`}
+                          >
+                            <User className="w-6 h-6" strokeWidth={1.5} />
+                          </div>
+                          <h3
+                            className={`text-2xl font-semibold tracking-tight mb-3 ${isDarkMode ? "text-white" : "text-slate-900"
+                              }`}
+                          >
+                            Citizen Portal
+                          </h3>
+                          <p
+                            className={`text-sm leading-relaxed mb-10 max-w-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"
+                              }`}
+                          >
+                            Citizen Portal Register, view UVID, and link
+                            credentials. Access Services
+                          </p>
+                          <div className="mt-auto w-full pt-6 border-t border-dashed border-gray-700/20">
+                            <button
+                              onClick={() => navigate("/citizen-portal")}
+                              className={`group/btn w-full py-3 px-0 flex items-center justify-between text-sm font-semibold tracking-wide transition-all
+                              ${isDarkMode
                                   ? "text-white hover:text-orange-400"
                                   : "text-slate-900 hover:text-orange-600"
-                              }`}
-                          >
-                            <span>Access Services</span>
-                            <span
-                              className={`p-2 rounded-full transition-all duration-300 group-hover/btn:translate-x-1 
-                                ${
-                                  isDarkMode
+                                }`}
+                            >
+                              <span>Access Services</span>
+                              <span
+                                className={`p-2 rounded-full transition-all duration-300 group-hover/btn:translate-x-1 
+                                ${isDarkMode
                                     ? "bg-white/5 group-hover/btn:bg-orange-500/20"
                                     : "bg-slate-100 group-hover/btn:bg-orange-100"
-                                }`}
-                            >
-                              <ArrowRight className="w-4 h-4" />
-                            </span>
-                          </button>
+                                  }`}
+                              >
+                                <ArrowRight className="w-4 h-4" />
+                              </span>
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Official Login Button */}
-                    <div
-                      className={`group relative overflow-hidden rounded-2xl border transition-all duration-500 hover:shadow-2xl
-                        ${
-                          isDarkMode
+                      {/* Official Login Button */}
+                      <div
+                        className={`group relative overflow-hidden rounded-2xl border transition-all duration-500 hover:shadow-2xl
+                        ${isDarkMode
                             ? "bg-[#0f0f11] border-white/10 hover:border-emerald-500/30"
                             : "bg-white border-slate-200 hover:border-emerald-200 shadow-sm"
-                        }`}
-                    >
-                      <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-emerald-600 to-emerald-400 opacity-80"></div>
-                      <div className="p-8 md:p-10 flex flex-col h-full items-start text-left">
-                        <div
-                          className={`mb-6 p-3 rounded-xl inline-flex items-center justify-center transition-colors duration-300
-                            ${
-                              isDarkMode
+                          }`}
+                      >
+                        <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-emerald-600 to-emerald-400 opacity-80"></div>
+                        <div className="p-8 md:p-10 flex flex-col h-full items-start text-left">
+                          <div
+                            className={`mb-6 p-3 rounded-xl inline-flex items-center justify-center transition-colors duration-300
+                            ${isDarkMode
                                 ? "bg-emerald-500/10 text-emerald-400"
                                 : "bg-emerald-50 text-emerald-600"
-                            }`}
-                        >
-                          <ShieldCheck className="w-6 h-6" strokeWidth={1.5} />
-                        </div>
-                        <h3
-                          className={`text-2xl font-semibold tracking-tight mb-3 ${
-                            isDarkMode ? "text-white" : "text-slate-900"
-                          }`}
-                        >
-                          Administrative Login
-                        </h3>
-                        <p
-                          className={`text-sm leading-relaxed mb-10 max-w-sm ${
-                            isDarkMode ? "text-slate-400" : "text-slate-500"
-                          }`}
-                        >
-                          Administrative Dashboard Secure gateway for
-                          Verification Officers and Auditors. Secure Login
-                        </p>
-                        <div className="mt-auto w-full pt-6 border-t border-dashed border-gray-700/20">
-                          <button
-                            onClick={() => navigate("/administrative")}
-                            className={`group/btn w-full py-3 px-0 flex items-center justify-between text-sm font-semibold tracking-wide transition-all
-                              ${
-                                isDarkMode
+                              }`}
+                          >
+                            <ShieldCheck className="w-6 h-6" strokeWidth={1.5} />
+                          </div>
+                          <h3
+                            className={`text-2xl font-semibold tracking-tight mb-3 ${isDarkMode ? "text-white" : "text-slate-900"
+                              }`}
+                          >
+                            Administrative Login
+                          </h3>
+                          <p
+                            className={`text-sm leading-relaxed mb-10 max-w-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"
+                              }`}
+                          >
+                            Administrative Dashboard Secure gateway for
+                            Verification Officers and Auditors. Secure Login
+                          </p>
+                          <div className="mt-auto w-full pt-6 border-t border-dashed border-gray-700/20">
+                            <button
+                              onClick={() => navigate("/administrative")}
+                              className={`group/btn w-full py-3 px-0 flex items-center justify-between text-sm font-semibold tracking-wide transition-all
+                              ${isDarkMode
                                   ? "text-white hover:text-emerald-400"
                                   : "text-slate-900 hover:text-emerald-600"
-                              }`}
-                          >
-                            <span>Secure Login</span>
-                            <span
-                              className={`p-2 rounded-full transition-all duration-300 group-hover/btn:translate-x-1 
-                                ${
-                                  isDarkMode
-                                    ? "bg-white/5 group-hover/btn:bg-emerald-500/20"
-                                    : "bg-slate-100 group-hover/btn:bg-emerald-100"
                                 }`}
                             >
-                              <Lock className="w-4 h-4" />
-                            </span>
-                          </button>
+                              <span>Secure Login</span>
+                              <span
+                                className={`p-2 rounded-full transition-all duration-300 group-hover/btn:translate-x-1 
+                                ${isDarkMode
+                                    ? "bg-white/5 group-hover/btn:bg-emerald-500/20"
+                                    : "bg-slate-100 group-hover/btn:bg-emerald-100"
+                                  }`}
+                              >
+                                <Lock className="w-4 h-4" />
+                              </span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Data Ingestion Sphere */}
+                  <div className="w-full max-w-7xl mx-auto mt-24">
+                    <div className="relative p-2 md:p-4">
+                      <div className="mb-6 text-center">
+                        <h3
+                          className={`text-xl md:text-2xl font-semibold tracking-tight ${isDarkMode ? "text-white" : "text-slate-900"
+                            }`}
+                        >
+                          National Credential Stream Processing
+                        </h3>
+                        <p
+                          className={`mt-2 text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"
+                            }`}
+                        >
+                          Discrete government credential for each citizen linked
+                          reducing fraud and enabling seamless access to services.
+                        </p>
+                      </div>
+
+                      <div className="data-sphere-stage">
+                        <div
+                          className={`data-ambient ${isDarkMode ? "data-ambient-dark" : "data-ambient-light"
+                            }`}
+                        ></div>
+                        <div className="data-flow-grid"></div>
+                        <svg
+                          className={`data-wire-layer ${isDarkMode ? "data-wire-layer-dark" : "data-wire-layer-light"
+                            }`}
+                          viewBox="0 0 100 100"
+                          preserveAspectRatio="none"
+                          aria-hidden="true"
+                        >
+                          {ingestionLayout.map((point, idx) => {
+                            const controlX = point.x < 50 ? 38 : 62;
+                            const controlY = point.y < 50 ? point.y + 8 : point.y - 8;
+                            return (
+                              <g key={`wire-${idx}`}>
+                                <path
+                                  className={`data-wire-base ${isDarkMode ? "data-wire-base-dark" : "data-wire-base-light"
+                                    }`}
+                                  d={`M ${point.x} ${point.y} Q ${controlX} ${controlY} 50 50`}
+                                />
+                                <path
+                                  className={`data-wire-flow ${isDarkMode ? "data-wire-flow-dark" : "data-wire-flow-light"
+                                    }`}
+                                  style={{ "--wire-delay": `${idx * 0.5}s` } as React.CSSProperties}
+                                  d={`M ${point.x} ${point.y} Q ${controlX} ${controlY} 50 50`}
+                                />
+                              </g>
+                            );
+                          })}
+                        </svg>
+
+                        {ingestionStats.map((stat, idx) => {
+                          const point = ingestionLayout[idx];
+                          const sideClass = point.x < 50 ? "data-node-left" : "data-node-right";
+                          return (
+                            <div
+                              key={stat.sub}
+                              className={`data-node-fixed ${sideClass}`}
+                              style={
+                                {
+                                  left: `${point.x}%`,
+                                  top: `${point.y}%`,
+                                  "--delay": `${idx * 0.45}s`,
+                                } as React.CSSProperties
+                              }
+                            >
+                              <div
+                                className={`data-node ${isDarkMode ? "data-node-dark" : "data-node-light"
+                                  }`}
+                              >
+                                <span
+                                  className={`text-xl md:text-2xl font-bold tracking-tight ${isDarkMode ? "text-white" : "text-slate-900"
+                                    }`}
+                                >
+                                  {stat.value}
+                                </span>
+                                <span
+                                  className={`text-[10px] md:text-xs uppercase tracking-widest font-semibold ${isDarkMode ? "text-slate-400" : "text-slate-600"
+                                    }`}
+                                >
+                                  {stat.sub}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+
+                        <div
+                          className={`data-core ${isDarkMode ? "data-core-dark" : "data-core-light"
+                            }`}
+                        >
+                          <div className="data-core-glow"></div>
+                          <div className="data-core-ring"></div>
+                          <div className="data-core-scan"></div>
+                          <span
+                            className={`text-xs md:text-sm font-semibold tracking-[0.18em] uppercase ${isDarkMode ? "text-slate-200" : "text-slate-700"
+                              }`}
+                          >
+                            CredChain Core
+                          </span>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-                {/* Data Ingestion Sphere */}
-                <div className="w-full max-w-7xl mx-auto mt-24">
-                  <div className="relative p-2 md:p-4">
-                    <div className="mb-6 text-center">
-                      <h3
-                        className={`text-xl md:text-2xl font-semibold tracking-tight ${
-                          isDarkMode ? "text-white" : "text-slate-900"
-                        }`}
-                      >
-                        National Credential Stream Processing
-                      </h3>
-                      <p
-                        className={`mt-2 text-sm ${
-                          isDarkMode ? "text-slate-400" : "text-slate-500"
-                        }`}
-                      >
-                        Discrete government credential for each citizen linked
-                        reducing fraud and enabling seamless access to services.
-                      </p>
-                    </div>
-
-                    <div className="data-sphere-stage">
-                      <div
-                        className={`data-ambient ${
-                          isDarkMode ? "data-ambient-dark" : "data-ambient-light"
-                        }`}
-                      ></div>
-                      <div className="data-flow-grid"></div>
-                      <svg
-                        className={`data-wire-layer ${
-                          isDarkMode ? "data-wire-layer-dark" : "data-wire-layer-light"
-                        }`}
-                        viewBox="0 0 100 100"
-                        preserveAspectRatio="none"
-                        aria-hidden="true"
-                      >
-                        {ingestionLayout.map((point, idx) => {
-                          const controlX = point.x < 50 ? 38 : 62;
-                          const controlY = point.y < 50 ? point.y + 8 : point.y - 8;
-                          return (
-                            <g key={`wire-${idx}`}>
-                              <path
-                                className={`data-wire-base ${
-                                  isDarkMode ? "data-wire-base-dark" : "data-wire-base-light"
-                                }`}
-                                d={`M ${point.x} ${point.y} Q ${controlX} ${controlY} 50 50`}
-                              />
-                              <path
-                                className={`data-wire-flow ${
-                                  isDarkMode ? "data-wire-flow-dark" : "data-wire-flow-light"
-                                }`}
-                                style={{ "--wire-delay": `${idx * 0.5}s` } as React.CSSProperties}
-                                d={`M ${point.x} ${point.y} Q ${controlX} ${controlY} 50 50`}
-                              />
-                            </g>
-                          );
-                        })}
-                      </svg>
-
-                      {ingestionStats.map((stat, idx) => {
-                        const point = ingestionLayout[idx];
-                        const sideClass = point.x < 50 ? "data-node-left" : "data-node-right";
-                        return (
-                          <div
-                            key={stat.sub}
-                            className={`data-node-fixed ${sideClass}`}
-                            style={
-                              {
-                                left: `${point.x}%`,
-                                top: `${point.y}%`,
-                                "--delay": `${idx * 0.45}s`,
-                              } as React.CSSProperties
-                            }
-                          >
-                            <div
-                              className={`data-node ${
-                                isDarkMode ? "data-node-dark" : "data-node-light"
-                              }`}
-                            >
-                              <span
-                                className={`text-xl md:text-2xl font-bold tracking-tight ${
-                                  isDarkMode ? "text-white" : "text-slate-900"
-                                }`}
-                              >
-                                {stat.value}
-                              </span>
-                              <span
-                                className={`text-[10px] md:text-xs uppercase tracking-widest font-semibold ${
-                                  isDarkMode ? "text-slate-400" : "text-slate-600"
-                                }`}
-                              >
-                                {stat.sub}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })}
-
-                      <div
-                        className={`data-core ${
-                          isDarkMode ? "data-core-dark" : "data-core-light"
-                        }`}
-                      >
-                        <div className="data-core-glow"></div>
-                        <div className="data-core-ring"></div>
-                        <div className="data-core-scan"></div>
-                        <span
-                          className={`text-xs md:text-sm font-semibold tracking-[0.18em] uppercase ${
-                            isDarkMode ? "text-slate-200" : "text-slate-700"
-                          }`}
-                        >
-                          CredChain Core
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </main>
-          }
-        />
-      </Routes>
+              </main>
+            }
+          />
+        </Routes>
+      </div>
 
       {/* --- FOOTER --- */}
       {!isRegistrationSuccess &&
@@ -591,11 +568,10 @@ const App: React.FC = () => {
         !isIndiaMap &&
         !isCitizenCard && (
           <footer
-            className={`relative z-10 border-t ${
-              isDarkMode
-                ? "bg-[#0a0a0c] border-white/5"
-                : "bg-white border-slate-200"
-            }`}
+            className={`relative z-10 border-t ${isDarkMode
+              ? "bg-[#0a0a0c] border-white/5"
+              : "bg-white border-slate-200"
+              }`}
           >
             <div className="container mx-auto px-6 max-w-7xl py-16">
               <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
@@ -608,17 +584,15 @@ const App: React.FC = () => {
                       <img src="./logo.webp" alt="Logo" />
                     </div>
                     <span
-                      className={`text-lg font-bold tracking-tight ${
-                        isDarkMode ? "text-white" : "text-slate-900"
-                      }`}
+                      className={`text-lg font-bold tracking-tight ${isDarkMode ? "text-white" : "text-slate-900"
+                        }`}
                     >
                       CredChain Portal
                     </span>
                   </div>
                   <p
-                    className={`text-sm leading-relaxed mb-6 max-w-xs ${
-                      isDarkMode ? "text-slate-500" : "text-slate-500"
-                    }`}
+                    className={`text-sm leading-relaxed mb-6 max-w-xs ${isDarkMode ? "text-slate-500" : "text-slate-500"
+                      }`}
                   >
                     The CredChain India is an autonomous constitutional
                     authority responsible for administering credential processes
@@ -627,9 +601,8 @@ const App: React.FC = () => {
                 </div>
                 <div className="md:col-span-2">
                   <h4
-                    className={`text-xs font-bold uppercase tracking-widest mb-6 ${
-                      isDarkMode ? "text-slate-200" : "text-slate-900"
-                    }`}
+                    className={`text-xs font-bold uppercase tracking-widest mb-6 ${isDarkMode ? "text-slate-200" : "text-slate-900"
+                      }`}
                   >
                     Services
                   </h4>
@@ -643,11 +616,10 @@ const App: React.FC = () => {
                       <li key={link}>
                         <a
                           href="#"
-                          className={`text-sm transition-colors ${
-                            isDarkMode
-                              ? "text-slate-500 hover:text-orange-400"
-                              : "text-slate-600 hover:text-orange-600"
-                          }`}
+                          className={`text-sm transition-colors ${isDarkMode
+                            ? "text-slate-500 hover:text-orange-400"
+                            : "text-slate-600 hover:text-orange-600"
+                            }`}
                         >
                           {link}
                         </a>
@@ -657,9 +629,8 @@ const App: React.FC = () => {
                 </div>
                 <div className="md:col-span-2">
                   <h4
-                    className={`text-xs font-bold uppercase tracking-widest mb-6 ${
-                      isDarkMode ? "text-slate-200" : "text-slate-900"
-                    }`}
+                    className={`text-xs font-bold uppercase tracking-widest mb-6 ${isDarkMode ? "text-slate-200" : "text-slate-900"
+                      }`}
                   >
                     Information
                   </h4>
@@ -669,11 +640,10 @@ const App: React.FC = () => {
                         <li key={link}>
                           <a
                             href="#"
-                            className={`text-sm transition-colors ${
-                              isDarkMode
-                                ? "text-slate-500 hover:text-white"
-                                : "text-slate-600 hover:text-slate-900"
-                            }`}
+                            className={`text-sm transition-colors ${isDarkMode
+                              ? "text-slate-500 hover:text-white"
+                              : "text-slate-600 hover:text-slate-900"
+                              }`}
                           >
                             {link}
                           </a>
@@ -684,16 +654,14 @@ const App: React.FC = () => {
                 </div>
                 <div className="md:col-span-4">
                   <h4
-                    className={`text-xs font-bold uppercase tracking-widest mb-6 ${
-                      isDarkMode ? "text-slate-200" : "text-slate-900"
-                    }`}
+                    className={`text-xs font-bold uppercase tracking-widest mb-6 ${isDarkMode ? "text-slate-200" : "text-slate-900"
+                      }`}
                   >
                     Headquarters
                   </h4>
                   <div
-                    className={`space-y-4 text-sm ${
-                      isDarkMode ? "text-slate-500" : "text-slate-600"
-                    }`}
+                    className={`space-y-4 text-sm ${isDarkMode ? "text-slate-500" : "text-slate-600"
+                      }`}
                   >
                     <p>
                       Nirvachan Sadan, Ashoka Road,
@@ -706,9 +674,8 @@ const App: React.FC = () => {
                           Helpline
                         </span>
                         <span
-                          className={`text-lg font-mono ${
-                            isDarkMode ? "text-white" : "text-slate-900"
-                          }`}
+                          className={`text-lg font-mono ${isDarkMode ? "text-white" : "text-slate-900"
+                            }`}
                         >
                           1950
                         </span>
@@ -719,9 +686,8 @@ const App: React.FC = () => {
                           Control Room
                         </span>
                         <span
-                          className={`text-lg font-mono ${
-                            isDarkMode ? "text-white" : "text-slate-900"
-                          }`}
+                          className={`text-lg font-mono ${isDarkMode ? "text-white" : "text-slate-900"
+                            }`}
                         >
                           011-23052205
                         </span>
@@ -731,11 +697,10 @@ const App: React.FC = () => {
                 </div>
               </div>
               <div
-                className={`border-t mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs ${
-                  isDarkMode
-                    ? "border-white/5 text-slate-600"
-                    : "border-slate-100 text-slate-400"
-                }`}
+                className={`border-t mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs ${isDarkMode
+                  ? "border-white/5 text-slate-600"
+                  : "border-slate-100 text-slate-400"
+                  }`}
               >
                 <p>&copy; 2025 CredChain India. NIC/GOI.</p>
                 <div className="flex gap-8">

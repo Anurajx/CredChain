@@ -295,11 +295,13 @@ const UserProfile: React.FC<UserProfileProps> = ({
     }
 
     try {
-      const response = await fetch(apiUrl(`/updateRequest/${formData.ID}`), {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(changes),
-      }
+      const response = await fetch(
+        apiUrl(`/updateRequest/${formData.ID}`),
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(changes),
+        }
 
         // const response = await fetch(
         //   apiUrl(`/update/${formData.ID}`),

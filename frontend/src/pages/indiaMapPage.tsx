@@ -71,29 +71,7 @@ const IndiaMapPage: React.FC = () => {
 
   return (
     <div className={`min-h-screen w-full font-sans antialiased ${bg} ${text}`}>
-      {/* Page header */}
-      <div className={`border-b ${divider} ${isDarkMode ? "bg-[#0f0f12]" : "bg-white"} px-6 py-5 sticky top-0 z-30 backdrop-blur-xl`}>
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <button
-            onClick={() => navigate("/")}
-            className={`flex items-center gap-2 text-sm font-medium transition-colors ${isDarkMode ? "text-slate-400 hover:text-white" : "text-slate-500 hover:text-slate-900"}`}
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Dashboard
-          </button>
-          <div className="flex items-center gap-2">
-            <span className={`w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse`} />
-            <span className={`text-xs font-medium ${muted}`}>Live</span>
-            <button
-              onClick={fetchStats}
-              className={`ml-4 p-1.5 rounded-lg transition-colors ${isDarkMode ? "hover:bg-white/5 text-slate-400 hover:text-white" : "hover:bg-slate-100 text-slate-500"}`}
-              title="Refresh"
-            >
-              <RefreshCw className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </div>
+
 
       <div className="max-w-7xl mx-auto px-6 py-10">
         {/* Title */}
