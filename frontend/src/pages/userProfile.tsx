@@ -17,11 +17,13 @@ import {
   Trash2,
   Link2,
   Sparkles,
+  Download,
   type LucideIcon,
 } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 import { useNavigate } from "react-router-dom";
 import { apiUrl } from "../config/api";
+import { generateIdCardPDF } from "../utils/generateIdCard";
 
 // --- TYPE DEFINITIONS ---
 
@@ -201,8 +203,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
     }>
   >(userData.LinkedCredentials || []);
   const [showCredentialPulse, setShowCredentialPulse] = useState(false);
-  const [integrity, setIntegrity] = useState<"" | "PASS" | "FAILED">("");
-  const [checkingIntegrity, setCheckingIntegrity] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   // 2. Handle Dynamic Prop Updates
   useEffect(() => {
@@ -402,17 +403,17 @@ const UserProfile: React.FC<UserProfileProps> = ({
     }
   };
 
-  const handleIntegrityCheck = async () => {
+  const handleDownloadCard = async () => {
     if (!formData.ID) return;
-    setCheckingIntegrity(true);
+    setIsGeneratingPDF(true);
     try {
-      const response = await fetch(apiUrl(`/tamper-check/${formData.ID}`));
-      const data = await response.json();
-      setIntegrity((data?.integrity as "PASS" | "FAILED") || "");
-    } catch {
-      setIntegrity("FAILED");
+      const baseUrl = window.location.origin;
+      await generateIdCardPDF(formData, baseUrl);
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+      setStatus({ type: "error", message: "Failed to generate ID card PDF." });
     } finally {
-      setCheckingIntegrity(false);
+      setIsGeneratingPDF(false);
     }
   };
 
@@ -582,21 +583,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
             <span className="font-medium text-sm">{status.message}</span>
           </div>
         )}
-        {integrity && (
-          <div
-            className={`rounded-md border p-3 flex items-center gap-3 text-xs font-semibold ${
-              integrity === "PASS"
-                ? isDarkMode
-                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-300"
-                  : "bg-emerald-50 border-emerald-200 text-emerald-800"
-                : isDarkMode
-                ? "bg-red-500/10 border-red-500/20 text-red-300"
-                : "bg-red-50 border-red-200 text-red-800"
-            }`}
-          >
-            Integrity: {integrity}
-          </div>
-        )}
+
         {/* Form Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Prominent Linked Credentials + Add Form */}
@@ -621,15 +608,20 @@ const UserProfile: React.FC<UserProfileProps> = ({
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={handleIntegrityCheck}
-                    disabled={checkingIntegrity}
-                    className={`rounded-md px-3 py-1.5 text-xs font-semibold ${
+                    onClick={handleDownloadCard}
+                    disabled={isGeneratingPDF}
+                    className={`rounded-md px-3 py-1.5 text-xs font-semibold flex items-center gap-1.5 ${
                       isDarkMode
-                        ? "bg-white/10 hover:bg-white/15 text-slate-200"
-                        : "bg-slate-900 hover:bg-slate-800 text-white"
+                        ? "bg-blue-600 hover:bg-blue-700 text-white"
+                        : "bg-[#000080] hover:bg-blue-900 text-white"
                     }`}
                   >
-                    {checkingIntegrity ? "Checking..." : "Check Integrity"}
+                    {isGeneratingPDF ? (
+                      <Loader2 size={12} className="animate-spin" />
+                    ) : (
+                      <Download size={12} />
+                    )}
+                    {isGeneratingPDF ? "Generating…" : "Download ID Card"}
                   </button>
                   <button
                     type="button"

@@ -11,6 +11,7 @@ import BLOPortal from "./pages/bloPortal";
 import AuditTrail from "./pages/auditTrail";
 import FuzzyDetection from "./pages/fuzzyDetection";
 import IndiaMapPage from "./pages/indiaMapPage";
+import CitizenCardPage from "./pages/CitizenCardPage";
 import { useTheme } from "./contexts/ThemeContext";
 //import { SignInButton, SignUpButton } from "@clerk/clerk-react";
 
@@ -46,6 +47,7 @@ const App: React.FC = () => {
   const isAuditTrail = location.pathname === "/audit-trail";
   const isFuzzyDetection = location.pathname === "/fuzzy-detection";
   const isIndiaMap = location.pathname === "/india-map";
+  const isCitizenCard = location.pathname.startsWith("/citizen-card");
 
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
   //const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
@@ -93,7 +95,8 @@ const App: React.FC = () => {
         !isBloPortal &&
         !isAuditTrail &&
         !isFuzzyDetection &&
-        !isIndiaMap && (
+        !isIndiaMap &&
+        !isCitizenCard && (
           <div className="fixed inset-0 z-0 pointer-events-none">
             <div
               className={`absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:4rem_4rem] 
@@ -122,7 +125,8 @@ const App: React.FC = () => {
         !isBloPortal &&
         !isAuditTrail &&
         !isFuzzyDetection &&
-        !isIndiaMap && (
+        !isIndiaMap &&
+        !isCitizenCard && (
           <nav
             className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 border-b border-transparent
           ${
@@ -255,6 +259,7 @@ const App: React.FC = () => {
         <Route path="/audit-trail" element={<AuditTrail />} />
         <Route path="/fuzzy-detection" element={<FuzzyDetection />} />
         <Route path="/india-map" element={<IndiaMapPage />} />
+        <Route path="/citizen-card/:id" element={<CitizenCardPage />} />
         <Route
           path="/*"
           element={
@@ -583,7 +588,8 @@ const App: React.FC = () => {
         !isBloPortal &&
         !isAuditTrail &&
         !isFuzzyDetection &&
-        !isIndiaMap && (
+        !isIndiaMap &&
+        !isCitizenCard && (
           <footer
             className={`relative z-10 border-t ${
               isDarkMode
