@@ -3,11 +3,13 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const SHA256 = require("crypto-js/sha256");
 const fuzz = require("fuzzball");
+const { v4: uuidv4 } = require("uuid");
 const { generateUniqueCode, IDType } = require("./UVID/generator");
 const { EPICgenerator, generateDistrictID } = require("./EPIC/generator");
 const Blockchain = require("./Blockchain/Blockchain"); // or correct path
 const blockchain = new Blockchain();
 const { computeConfidenceScore } = require("./models/confidence");
+const { sendSMSToAllContacts, sendSMS } = require("./services/smsService");
 
 require("dotenv").config();
 
@@ -38,6 +40,61 @@ const voterSchema = new mongoose.Schema({}, { strict: false });
 const StateVoter = DB.model("Voter", voterSchema, "voters");
 const TempVoter = DB.model("Voter", voterSchema, "tempVotersBLO");
 const UpdateVoter = DB.model("Voter", voterSchema, "toUpdate");
+
+// Emergency Access Models
+const emergencyContactSchema = new mongoose.Schema(
+  {
+    name: { type: String, default: "" },
+    relationship: { type: String, default: "" },
+    phone1: { type: String, default: "" },
+    phone2: { type: String, default: "" },
+  },
+  { _id: false }
+);
+
+const emergencyTokenSchema = new mongoose.Schema(
+  {
+    uvid: { type: String, required: true, index: true },
+    token: { type: String, required: true, unique: true, index: true },
+    createdAt: { type: Date, default: () => new Date() },
+    expiresAt: { type: Date, required: true },
+    isActive: { type: Boolean, default: true },
+    emergencyContacts: {
+      type: [emergencyContactSchema],
+      default: () => [{}, {}],
+    },
+    accessLog: { type: Array, default: [] }, // [{accessedAt, accessorNote, event, smsSent, smsRecipients, ...}]
+  },
+  { strict: true }
+);
+
+const EmergencyToken = DB.model(
+  "EmergencyToken",
+  emergencyTokenSchema,
+  "emergencyTokens"
+);
+
+const notificationSchema = new mongoose.Schema(
+  {
+    uvid: { type: String, required: true, index: true },
+    type: { type: String, required: true, index: true },
+    message: { type: String, required: true },
+    seenByUser: { type: Boolean, default: false },
+    createdAt: { type: Date, default: () => new Date() },
+
+    // SMS audit fields (optional; included when sendSMS is requested)
+    smsSent: { type: Boolean, default: false },
+    smsRecipients: { type: [String], default: [] },
+    timestamp: { type: Date },
+  },
+  { strict: true }
+);
+
+const Notification = DB.model(
+  "EmergencyNotification",
+  notificationSchema,
+  "notifications"
+);
 
 /* -----------------------------------
    ROUTES
@@ -272,6 +329,468 @@ app.put("/updateRequest/:id", async (req, res) => {
 
   await newVoter.save();
   res.json({ message: "Application submitted for updation" });
+});
+
+// ===========================
+// Emergency Access Mode APIs
+// ===========================
+
+const formatTimestampIST = (date = new Date()) => {
+  try {
+    return new Date(date).toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  } catch {
+    return new Date(date).toISOString();
+  }
+};
+
+const normalizeEmergencyContacts = (voter) => {
+  const toStr = (v) => (v == null ? "" : String(v));
+
+  const raw = voter?.emergencyContacts;
+  if (Array.isArray(raw) && raw.length > 0) {
+    const c0 = raw[0] || {};
+    const c1 = raw[1] || {};
+    return [
+      {
+        name: toStr(c0.name),
+        relationship: toStr(c0.relationship),
+        phone1: toStr(c0.phone1),
+        phone2: toStr(c0.phone2),
+      },
+      {
+        name: toStr(c1.name),
+        relationship: toStr(c1.relationship),
+        phone1: toStr(c1.phone1),
+        phone2: toStr(c1.phone2),
+      },
+    ];
+  }
+
+  // Backward compatibility: older single emergencyContact shape
+  const legacy = voter?.emergencyContact || {};
+  return [
+    {
+      name: toStr(legacy.name),
+      relationship: toStr(legacy.relationship),
+      phone1: toStr(legacy.phone || legacy.phone1),
+      phone2: toStr(legacy.phone2),
+    },
+    {
+      name: "",
+      relationship: "",
+      phone1: "",
+      phone2: "",
+    },
+  ];
+};
+
+// 1) Generate a signed emergency access token (stored in Mongo)
+app.post("/emergency/generate/:uvid", async (req, res) => {
+  try {
+    const uvid = req.params.uvid;
+    if (!uvid) return res.status(400).json({ message: "uvid is required" });
+
+    const token = uuidv4();
+    const createdAt = new Date();
+    const expiresAt = new Date(createdAt.getTime() + 72 * 60 * 60 * 1000); // 72 hours
+
+    const voter = await StateVoter.findOne({ ID: uvid }).lean();
+    // Prefer the token snapshot emergency contacts; fallback to the citizen record.
+    const emergencyContacts = normalizeEmergencyContacts({
+      emergencyContacts: emergencyToken.emergencyContacts,
+      emergencyContact: voter.emergencyContact,
+    });
+
+    const emergencyToken = await EmergencyToken.create({
+      uvid,
+      token,
+      createdAt,
+      expiresAt,
+      isActive: true,
+      emergencyContacts,
+      accessLog: [],
+    });
+
+    res.json({
+      token: emergencyToken.token,
+      emergencyUrl: `/emergency/${emergencyToken.token}`,
+    });
+  } catch (error) {
+    console.error("Emergency token generation error:", error);
+    res.status(500).json({ message: "Failed to generate emergency token" });
+  }
+});
+
+// 2) Public emergency endpoint (no auth)
+app.get("/emergency/:token", async (req, res, next) => {
+  try {
+    const token = req.params.token;
+    // Avoid route shadowing: /emergency/notifications/:uvid is also a GET route.
+    if (token === "notifications") return next();
+    const emergencyToken = await EmergencyToken.findOne({ token }).lean();
+
+    if (
+      !emergencyToken ||
+      emergencyToken.isActive !== true ||
+      !emergencyToken.expiresAt ||
+      new Date(emergencyToken.expiresAt).getTime() <= Date.now()
+    ) {
+      return res.status(403).json({ message: "Emergency token expired or revoked" });
+    }
+
+    const voter = await StateVoter.findOne({ ID: emergencyToken.uvid }).lean();
+    if (!voter) return res.status(404).json({ message: "Citizen/UVID not found" });
+
+    const scanAccessedAt = Date.now();
+
+    // Append access log entry (placeholder for accessor audit)
+    await EmergencyToken.updateOne(
+      { token },
+      {
+        $push: {
+          accessLog: { accessedAt: scanAccessedAt, accessorNote: "" },
+        },
+      }
+    );
+
+    // Fire-and-forget SMS scan alert to all emergency contacts.
+    // Prefer contacts stored in the emergency token; fallback to citizen record.
+    const emergencyContacts = normalizeEmergencyContacts({
+      emergencyContacts: emergencyToken.emergencyContacts,
+      emergencyContact: voter.emergencyContact,
+    });
+    const scanIstTimestamp = formatTimestampIST(new Date(scanAccessedAt));
+    const fullName = `${(voter.FirstName || "").trim()} ${(voter.LastName || "").trim()}`.trim();
+    const scanSmsMessage = `[CredChain Emergency Alert]
+Your emergency identity QR was just scanned.
+
+Identity: ${fullName}
+Time: ${scanIstTimestamp}
+Location data: Not available
+
+If this was not an emergency, revoke access immediately at:
+credchain.in/user-profile
+
+This is an automated alert from CredChain India.
+`;
+
+    // Non-blocking: do not await SMS before responding.
+    void sendSMSToAllContacts(emergencyContacts, scanSmsMessage)
+      .then((results) => {
+        const smsSent = Array.isArray(results)
+          ? results.some((r) => r?.sent === true)
+          : false;
+        const smsRecipients = Array.isArray(results)
+          ? results
+              .map((r) => r?.to)
+              .filter((t) => typeof t === "string" && t.trim())
+          : [];
+
+        return EmergencyToken.updateOne(
+          { token },
+          {
+            $push: {
+              accessLog: {
+                event: "TOKEN_SCANNED",
+                smsSent,
+                smsRecipients,
+                accessedAt: scanAccessedAt,
+              },
+            },
+          }
+        );
+      })
+      .catch(() => {
+        // sendSMSToAllContacts should never throw; keep as defensive.
+        return EmergencyToken.updateOne(
+          { token },
+          {
+            $push: {
+              accessLog: {
+                event: "TOKEN_SCANNED",
+                smsSent: false,
+                smsRecipients: [],
+                accessedAt: scanAccessedAt,
+              },
+            },
+          }
+        );
+      });
+
+    // Immutable blockchain log
+    blockchain.logImmutableEvent({
+      ID: emergencyToken.uvid,
+      TYPE: "EMERGENCY_ACCESS",
+      CREDENTIAL_TYPE: "PROFILE",
+      DETAILS: "Public emergency token accessed",
+      actor: "ANONYMOUS_EMERGENCY",
+    });
+
+    // Return ONLY allowed fields
+    res.json({
+      FirstName: voter.FirstName,
+      LastName: voter.LastName,
+      Phone: voter.Phone,
+      State: voter.State,
+      Birthday: voter.Birthday,
+      Sex: voter.Sex,
+
+      bloodGroup: voter.bloodGroup,
+      allergies: voter.allergies,
+      emergencyContacts,
+      organDonor: voter.organDonor,
+      medicalConditions: voter.medicalConditions,
+      insuranceId: voter.insuranceId,
+    });
+  } catch (error) {
+    console.error("Emergency token access error:", error);
+    res.status(500).json({ message: "Failed to access emergency token" });
+  }
+});
+
+// 3) Notify identity holder after accessor identifies themselves
+app.post("/emergency/notify/:token", async (req, res) => {
+  try {
+    const token = req.params.token;
+    const {
+      reason,
+      accessorName,
+      accessorRole,
+      accessorPhone,
+      organizationName,
+    } = req.body || {};
+
+    if (!reason || !accessorName || !accessorRole) {
+      return res.status(400).json({
+        message: "reason, accessorName, and accessorRole are required",
+      });
+    }
+
+    const emergencyToken = await EmergencyToken.findOne({ token });
+    if (
+      !emergencyToken ||
+      emergencyToken.isActive !== true ||
+      !emergencyToken.expiresAt ||
+      new Date(emergencyToken.expiresAt).getTime() <= Date.now()
+    ) {
+      return res.status(403).json({ message: "Emergency token expired or revoked" });
+    }
+
+    const voter = await StateVoter.findOne({ ID: emergencyToken.uvid }).lean();
+    if (!voter) return res.status(404).json({ message: "Citizen/UVID not found" });
+
+    const emergencyContacts = normalizeEmergencyContacts(voter);
+
+    const accessorIstTimestamp = formatTimestampIST(new Date());
+    const citizenFullName = `${(voter.FirstName || "").trim()} ${(voter.LastName || "").trim()}`.trim();
+
+    const smsMessage = `[CredChain Emergency Alert]
+Someone has accessed the emergency identity of ${citizenFullName}.
+
+Accessor Details:
+Name: ${accessorName}
+Role: ${accessorRole}
+Organization: ${organizationName || ""}
+Phone: ${accessorPhone || ""}
+Reason: ${reason}
+Time: ${accessorIstTimestamp}
+
+This is an automated alert from CredChain India Identity System.
+`;
+
+    // SMS to emergency contacts (up to 4 numbers)
+    const emergencyResults = await sendSMSToAllContacts(
+      emergencyContacts,
+      smsMessage
+    );
+
+    // Also notify the citizen (user profile) via their registered phone(s)
+    const citizenPhoneRaw = String(voter?.Phone || "");
+    const citizenPhones = citizenPhoneRaw
+      .split(/[,;]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    const citizenResults = [];
+    for (const phone of citizenPhones) {
+      // sendSMS never throws.
+      // eslint-disable-next-line no-await-in-loop
+      citizenResults.push(await sendSMS(phone, smsMessage));
+    }
+
+    const allResults = [...(Array.isArray(emergencyResults) ? emergencyResults : []), ...citizenResults];
+
+    const smsRecipients = allResults
+      .map((r) => r?.to)
+      .filter((t) => typeof t === "string" && t.trim());
+    const smsSent = allResults.some((r) => r?.sent === true);
+
+    const newAccessLogEntry = {
+      accessedAt: Date.now(),
+      accessorNote: reason,
+      reason,
+      accessorName,
+      accessorRole,
+      accessorPhone,
+      smsSent,
+      smsRecipients,
+    };
+
+    // Save into the token's accessLog last accessor-related entry.
+    if (
+      Array.isArray(emergencyToken.accessLog) &&
+      emergencyToken.accessLog.length > 0
+    ) {
+      const accessorPlaceholderIdx = [...emergencyToken.accessLog]
+        .map((e, i) => ({ e, i }))
+        .filter(({ e }) => (e?.accessorNote ?? "") === "" && e?.event !== "TOKEN_SCANNED")
+        .map(({ i }) => i)
+        .pop();
+
+      const idxToUpdate =
+        typeof accessorPlaceholderIdx === "number"
+          ? accessorPlaceholderIdx
+          : emergencyToken.accessLog.length - 1;
+
+      emergencyToken.accessLog[idxToUpdate] = {
+        ...(emergencyToken.accessLog[idxToUpdate] || {}),
+        ...newAccessLogEntry,
+      };
+    } else {
+      emergencyToken.accessLog = [newAccessLogEntry];
+    }
+
+    await emergencyToken.save();
+
+    const message = `${accessorName} (${accessorRole}) requested emergency access: ${reason}`;
+    await Notification.create({
+      uvid: emergencyToken.uvid,
+      type: "EMERGENCY_ACCESS_ALERT",
+      message,
+      seenByUser: false,
+      createdAt: new Date(),
+      smsSent,
+      smsRecipients,
+    });
+
+    res.json({ success: true, smsSent, smsRecipients });
+  } catch (error) {
+    console.error("Emergency notify error:", error);
+    res.status(500).json({ message: "Failed to notify identity holder" });
+  }
+});
+
+// 4) Ping notifications (ongoing assistance)
+app.post("/emergency/ping/:token", async (req, res) => {
+  try {
+    const token = req.params.token;
+    const { message, sendSMS } = req.body || {};
+
+    if (!message) {
+      return res.status(400).json({ message: "message is required" });
+    }
+
+    const emergencyToken = await EmergencyToken.findOne({ token }).lean();
+    if (
+      !emergencyToken ||
+      emergencyToken.isActive !== true ||
+      !emergencyToken.expiresAt ||
+      new Date(emergencyToken.expiresAt).getTime() <= Date.now()
+    ) {
+      return res.status(403).json({ message: "Emergency token expired or revoked" });
+    }
+
+    const voter = await StateVoter.findOne({ ID: emergencyToken.uvid }).lean();
+    const timestamp = new Date();
+
+    let smsSent = false;
+    let smsRecipients = [];
+
+    if (sendSMS === true && voter) {
+      const ongoingIstTimestamp = formatTimestampIST(new Date(timestamp));
+      const emergencyContacts = normalizeEmergencyContacts(voter);
+      const accessorFullName = `${(voter.FirstName || "").trim()} ${(voter.LastName || "").trim()}`.trim();
+
+      const smsMessage = `[CredChain Ongoing Alert]
+Emergency accessor is still present with ${accessorFullName}.
+
+Message: ${message}
+Time: ${ongoingIstTimestamp}
+
+This is an automated update from CredChain India.
+`;
+
+      const results = await sendSMSToAllContacts(emergencyContacts, smsMessage);
+      smsRecipients = Array.isArray(results)
+        ? results.map((r) => r?.to).filter((t) => typeof t === "string" && t.trim())
+        : [];
+      smsSent = Array.isArray(results) ? results.some((r) => r?.sent === true) : false;
+    }
+
+    await Notification.create({
+      uvid: emergencyToken.uvid,
+      type: "EMERGENCY_PING",
+      message,
+      seenByUser: false,
+      createdAt: timestamp,
+      timestamp,
+      smsSent,
+      smsRecipients,
+    });
+
+    res.json({
+      success: true,
+      smsSent,
+      smsRecipients,
+      timestamp: timestamp.toISOString(),
+    });
+  } catch (error) {
+    console.error("Emergency ping error:", error);
+    res.status(500).json({ message: "Failed to send ping" });
+  }
+});
+
+// 5) Fetch notifications for a citizen
+app.get("/emergency/notifications/:uvid", async (req, res) => {
+  try {
+    const uvid = req.params.uvid;
+    if (!uvid) return res.status(400).json({ message: "uvid is required" });
+
+    const notifications = await Notification.find({ uvid })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json(notifications);
+  } catch (error) {
+    console.error("Emergency notifications fetch error:", error);
+    res.status(500).json({ message: "Failed to fetch notifications" });
+  }
+});
+
+// 6) Revoke emergency access for a citizen
+app.delete("/emergency/token/:uvid", async (req, res) => {
+  try {
+    const uvid = req.params.uvid;
+    if (!uvid) return res.status(400).json({ message: "uvid is required" });
+
+    const result = await EmergencyToken.updateMany(
+      { uvid, isActive: true },
+      { $set: { isActive: false } }
+    );
+
+    res.json({ success: true, revokedCount: result.modifiedCount || 0 });
+  } catch (error) {
+    console.error("Emergency token revoke error:", error);
+    res.status(500).json({ message: "Failed to revoke emergency access" });
+  }
 });
 
 //read psuedo update db
