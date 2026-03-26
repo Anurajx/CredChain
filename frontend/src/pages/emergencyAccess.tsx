@@ -5,6 +5,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import {
   AlertTriangle,
   Phone,
+  PhoneCall,
   ShieldAlert,
   CheckCircle2,
   AlertCircle,
@@ -12,7 +13,9 @@ import {
 
 type EmergencyContact = {
   name?: string;
-  phone?: string;
+  relationship?: string;
+  phone1?: string;
+  phone2?: string;
 };
 
 type EmergencyProfile = {
@@ -25,7 +28,7 @@ type EmergencyProfile = {
 
   bloodGroup?: string;
   allergies?: string[] | string;
-  emergencyContact?: EmergencyContact;
+  emergencyContacts?: EmergencyContact[];
   organDonor?: boolean;
   medicalConditions?: string;
   insuranceId?: string;
@@ -56,14 +59,41 @@ const EmergencyAccess: React.FC = () => {
   const [organizationName, setOrganizationName] = useState("");
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [notifySmsSent, setNotifySmsSent] = useState<boolean | null>(null);
+  const [notifySmsRecipients, setNotifySmsRecipients] = useState<string[]>(
+    []
+  );
 
   // Ping / Continuous check-ins
   const [continuousPingsEnabled, setContinuousPingsEnabled] = useState(false);
+  const [pingIntervalMinutes, setPingIntervalMinutes] = useState(5);
+  const [pingLog, setPingLog] = useState<
+    Array<{ timestamp: string; text: string }>
+  >([]);
   const [pingMessage, setPingMessage] = useState("");
   const [pingSending, setPingSending] = useState(false);
+  const [manualSendAsSMS, setManualSendAsSMS] = useState(true);
 
   const allergies = useMemo(() => normalizeAllergies(profile?.allergies), [profile?.allergies]);
-  const emergencyContact = profile?.emergencyContact || {};
+  const emergencyContacts = useMemo(() => {
+    const raw = profile?.emergencyContacts;
+    const primary = raw?.[0] || {};
+    const secondary = raw?.[1] || {};
+    return [
+      {
+        name: primary.name || "",
+        relationship: primary.relationship || "",
+        phone1: primary.phone1 || "",
+        phone2: primary.phone2 || "",
+      },
+      {
+        name: secondary.name || "",
+        relationship: secondary.relationship || "",
+        phone1: secondary.phone1 || "",
+        phone2: secondary.phone2 || "",
+      },
+    ];
+  }, [profile?.emergencyContacts]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -101,29 +131,60 @@ const EmergencyAccess: React.FC = () => {
     if (!token) return;
     if (!continuousPingsEnabled) return;
 
+    setPingLog([]);
+
     const intervalId = window.setInterval(async () => {
-      const timestamp = new Date().toLocaleString("en-IN", {
-        year: "numeric",
-        month: "short",
-        day: "2-digit",
+      const now = new Date();
+      const timestamp = now.toLocaleTimeString("en-IN", {
         hour: "2-digit",
         minute: "2-digit",
+        second: "2-digit",
       });
-      const message = `Accessor still present at ${timestamp}`;
 
       try {
-        await fetch(apiUrl(`/emergency/ping/${encodeURIComponent(token)}`), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message }),
-        });
+        const res = await fetch(
+          apiUrl(`/emergency/ping/${encodeURIComponent(token)}`),
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              message: "Accessor still present",
+              sendSMS: true,
+            }),
+          }
+        );
+        if (!res.ok) throw new Error("Ping failed");
+
+        const data = await res.json();
+        const recipientsCount = Array.isArray(data?.smsRecipients)
+          ? data.smsRecipients.length
+          : 0;
+
+        const smsPart =
+          data?.smsSent === true
+            ? `SMS dispatched to ${recipientsCount} contacts`
+            : "SMS dispatch failed";
+
+        setPingLog((prev) => [
+          ...prev,
+          {
+            timestamp,
+            text: `Ping sent — ${smsPart}`,
+          },
+        ]);
       } catch {
-        // In emergencies we don't want to break the page on ping failure.
+        setPingLog((prev) => [
+          ...prev,
+          {
+            timestamp,
+            text: "Ping sent — SMS dispatch failed",
+          },
+        ]);
       }
-    }, 5 * 60 * 1000);
+    }, pingIntervalMinutes * 60 * 1000);
 
     return () => window.clearInterval(intervalId);
-  }, [continuousPingsEnabled, token]);
+  }, [continuousPingsEnabled, pingIntervalMinutes, token]);
 
   const submitNotify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,9 +196,14 @@ const EmergencyAccess: React.FC = () => {
     }
 
     setHasSubmitted(true);
+    setSubmitSuccess(false);
+    setNotifySmsSent(null);
+    setNotifySmsRecipients([]);
 
     try {
-      const res = await fetch(apiUrl(`/emergency/notify/${encodeURIComponent(token)}`), {
+      const res = await fetch(
+        apiUrl(`/emergency/notify/${encodeURIComponent(token)}`),
+        {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -148,10 +214,16 @@ const EmergencyAccess: React.FC = () => {
           // org name intentionally not sent: backend spec only requires reason + accessor identity
           organizationName,
         }),
-      });
+        }
+      );
 
       if (!res.ok) throw new Error("Notification failed");
+      const data = await res.json();
       setSubmitSuccess(true);
+      setNotifySmsSent(data?.smsSent === true);
+      setNotifySmsRecipients(
+        Array.isArray(data?.smsRecipients) ? data.smsRecipients : []
+      );
     } catch {
       // Keep the form disabled (we already locked submit once per page load),
       // but show a visible error.
@@ -160,25 +232,61 @@ const EmergencyAccess: React.FC = () => {
     }
   };
 
-  const sendPing = async (message: string) => {
+  const sendPing = async (message: string, sendAsSMS: boolean) => {
     if (!token) return;
     const trimmed = message.trim();
     if (!trimmed) return;
 
     setPingSending(true);
     try {
-      const res = await fetch(apiUrl(`/emergency/ping/${encodeURIComponent(token)}`), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: trimmed }),
+      const timestamp = new Date().toLocaleTimeString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
       });
+
+      const res = await fetch(
+        apiUrl(`/emergency/ping/${encodeURIComponent(token)}`),
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: trimmed, sendSMS: sendAsSMS }),
+        }
+      );
       if (!res.ok) throw new Error("Ping failed");
+
+      const data = await res.json();
+      const recipientsCount = Array.isArray(data?.smsRecipients)
+        ? data.smsRecipients.length
+        : 0;
+      const smsPart =
+        sendAsSMS === true
+          ? data?.smsSent === true
+            ? `SMS dispatched to ${recipientsCount} contacts`
+            : "SMS dispatch failed"
+          : "SMS not sent";
+
+      setPingLog((prev) => [
+        ...prev,
+        {
+          timestamp,
+          text: `Ping sent — ${smsPart}`,
+        },
+      ]);
+
       setPingMessage("");
     } catch {
       // Non-blocking; still keep emergency page usable.
     } finally {
       setPingSending(false);
     }
+  };
+
+  const maskPhone = (phone: string) => {
+    const digits = String(phone || "").replace(/\D/g, "");
+    if (!digits) return "";
+    if (digits.length <= 4) return digits;
+    return `XXXXXX${digits.slice(-4)}`;
   };
 
   const renderAllergies = () => {
@@ -317,27 +425,100 @@ const EmergencyAccess: React.FC = () => {
             </div>
           </div>
 
-          <div className="mt-5 border-t border-slate-200 pt-4">
-            <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              Emergency Contact
-            </div>
-            <div className="mt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div>
-                <div className="text-sm font-extrabold">
-                  {emergencyContact.name || "—"}
+        </section>
+
+        {/* Emergency Contacts */}
+        <section
+          className={`rounded-xl border p-5 shadow-sm ${
+            isDarkMode ? "bg-[#0f0f11] border-white/10" : "bg-white border-slate-200"
+          }`}
+        >
+          <div
+            className={`flex items-center gap-2 mb-4 ${
+              isDarkMode ? "text-slate-200" : "text-slate-900"
+            }`}
+          >
+            <Phone size={18} />
+            <h2 className="text-lg font-extrabold">Emergency Contacts</h2>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4">
+            {emergencyContacts.map((c, idx) => {
+              const isPrimary = idx === 0;
+              const badgeClass = isPrimary
+                ? "bg-blue-600 text-white"
+                : "bg-slate-500 text-white";
+              const borderClass = isPrimary
+                ? "border-l-4 border-blue-500"
+                : "border-l-4 border-slate-500";
+
+              const phone1 = c.phone1 || "";
+              const phone2 = c.phone2 || "";
+
+              return (
+                <div
+                  key={idx}
+                  className={`rounded-xl border p-5 ${borderClass} ${
+                    isDarkMode ? "border-white/10" : "border-slate-200"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="text-lg font-extrabold">
+                        {c.name || "—"}
+                      </div>
+                      <div className="text-sm text-slate-700">
+                        Relationship: {c.relationship || "—"}
+                      </div>
+                    </div>
+
+                    <span
+                      className={`text-xs font-extrabold rounded-full px-3 py-1 ${badgeClass}`}
+                    >
+                      {isPrimary ? "Primary Contact" : "Secondary Contact"}
+                    </span>
+                  </div>
+
+                  <div className="mt-4 space-y-3">
+                    <div className="space-y-1">
+                      <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                        Mobile Number 1
+                      </div>
+                      <a
+                        href={`tel:${phone1}`}
+                        className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold bg-green-600 hover:bg-green-700 text-white ${
+                          phone1 ? "" : "pointer-events-none opacity-60"
+                        }`}
+                      >
+                        <PhoneCall size={16} />
+                        Call
+                      </a>
+                      <div className="text-sm text-slate-700">
+                        {phone1 || "Not provided"}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                        Alternate number
+                      </div>
+                      <a
+                        href={`tel:${phone2}`}
+                        className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold bg-green-600 hover:bg-green-700 text-white ${
+                          phone2 ? "" : "pointer-events-none opacity-60"
+                        }`}
+                      >
+                        <PhoneCall size={16} />
+                        Call
+                      </a>
+                      <div className={`text-sm ${phone2 ? "text-slate-700" : "text-slate-500"}`}>
+                        {phone2 || "Not provided"}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-sm text-slate-700">
-                  {emergencyContact.phone || profile.Phone || "—"}
-                </div>
-              </div>
-              <a
-                href={`tel:${emergencyContact.phone || profile.Phone || ""}`}
-                className="inline-flex items-center justify-center gap-2 rounded-md bg-[#000080] text-white px-4 py-2 text-sm font-bold disabled:opacity-50"
-              >
-                <Phone size={16} />
-                Call
-              </a>
-            </div>
+              );
+            })}
           </div>
         </section>
 
@@ -434,6 +615,20 @@ const EmergencyAccess: React.FC = () => {
                   Identity holder has been notified. This access is now permanently logged.
                 </div>
               )}
+
+              {submitSuccess && notifySmsSent !== null && (
+                <div className="text-xs font-semibold text-slate-700">
+                  {notifySmsSent ? (
+                    <>
+                      Emergency contacts SMS dispatched for reason “{reasonForAccess}”
+                      (to {notifySmsRecipients.length} attempted recipients:{" "}
+                      {notifySmsRecipients.map(maskPhone).filter(Boolean).join(", ")}).
+                    </>
+                  ) : (
+                    <>SMS to emergency contacts failed or was not configured.</>
+                  )}
+                </div>
+              )}
             </div>
           </form>
         </section>
@@ -467,7 +662,63 @@ const EmergencyAccess: React.FC = () => {
               </span>
             </label>
 
-            <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
+            {continuousPingsEnabled && (
+              <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
+                <div className="flex-1 flex flex-col gap-1">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-600">
+                    Ping interval
+                  </label>
+                  <select
+                    value={pingIntervalMinutes}
+                    onChange={(e) => setPingIntervalMinutes(Number(e.target.value))}
+                    className={`border border-slate-300 rounded-md px-3 py-2 text-sm ${
+                      isDarkMode ? "bg-white/5 text-slate-200" : "bg-white text-slate-900"
+                    }`}
+                  >
+                    <option value={5}>5 minutes</option>
+                    <option value={10}>10 minutes</option>
+                    <option value={15}>15 minutes</option>
+                    <option value={30}>30 minutes</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {continuousPingsEnabled && (
+              <div
+                className={`rounded-md border p-3 max-h-[200px] overflow-auto ${
+                  isDarkMode
+                    ? "bg-[#0a0a0c] text-slate-200 border-white/10"
+                    : "bg-slate-900 text-slate-100 border-slate-700"
+                }`}
+              >
+                {pingLog.length === 0 ? (
+                  <div className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-300"}`}>
+                    No pings sent yet.
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {pingLog.map((entry, idx) => (
+                      <div key={`${entry.timestamp}-${idx}`} className="text-xs font-semibold">
+                        [{entry.timestamp}] {entry.text}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex flex-col gap-2">
+              <label className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                <input
+                  type="checkbox"
+                  checked={manualSendAsSMS}
+                  onChange={(e) => setManualSendAsSMS(e.target.checked)}
+                />
+                Also send as SMS to emergency contacts
+              </label>
+
+              <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
               <div className="flex-1 flex flex-col gap-1">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-600">
                   Message
@@ -482,11 +733,12 @@ const EmergencyAccess: React.FC = () => {
               <button
                 type="button"
                 disabled={pingSending || !pingMessage.trim()}
-                onClick={() => sendPing(pingMessage)}
+                onClick={() => sendPing(pingMessage, manualSendAsSMS)}
                 className="rounded-md bg-[#000080] text-white px-5 py-2.5 text-sm font-extrabold disabled:opacity-60"
               >
                 {pingSending ? "Sending…" : "Send Update to Identity Holder"}
               </button>
+              </div>
             </div>
 
             <p className="text-sm text-slate-600">

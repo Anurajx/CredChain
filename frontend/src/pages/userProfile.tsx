@@ -21,6 +21,7 @@ import {
   Link2,
   Sparkles,
   Download,
+  MessageSquare,
   type LucideIcon,
 } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
@@ -53,6 +54,12 @@ interface UserData {
     details?: string;
     linkedAt?: string;
     actor?: string;
+  }>;
+  emergencyContacts?: Array<{
+    name: string;
+    relationship: string;
+    phone1: string;
+    phone2: string;
   }>;
   // Index signature to allow dynamic access via keys
   [key: string]:
@@ -100,12 +107,36 @@ interface EmergencyNotification {
   message: string;
   seenByUser: boolean;
   createdAt: string;
+  smsSent?: boolean;
+  smsRecipients?: string[];
 }
 
 interface EmergencyTokenGenerateResponse {
   token: string;
   emergencyUrl: string;
 }
+
+const normalizeEmergencyContacts = (
+  raw?: UserData["emergencyContacts"]
+): NonNullable<UserData["emergencyContacts"]> => {
+  const contacts = Array.isArray(raw) ? raw : [];
+  const c0 = contacts[0] || { name: "", relationship: "", phone1: "", phone2: "" };
+  const c1 = contacts[1] || { name: "", relationship: "", phone1: "", phone2: "" };
+  return [
+    {
+      name: c0.name || "",
+      relationship: c0.relationship || "",
+      phone1: c0.phone1 || "",
+      phone2: c0.phone2 || "",
+    },
+    {
+      name: c1.name || "",
+      relationship: c1.relationship || "",
+      phone1: c1.phone1 || "",
+      phone2: c1.phone2 || "",
+    },
+  ];
+};
 
 // --- MOCK DATA (Fallback) ---
 const DEFAULT_USER_DATA: UserData = {
@@ -124,6 +155,10 @@ const DEFAULT_USER_DATA: UserData = {
   VoterId: "PLD9O0401",
   DefPassword: "PLD@8779",
   State: "Sikkim",
+  emergencyContacts: [
+    { name: "", relationship: "", phone1: "", phone2: "" },
+    { name: "", relationship: "", phone1: "", phone2: "" },
+  ],
 };
 
 // --- COMPONENT DEFINED OUTSIDE TO PREVENT RE-RENDER/FOCUS LOSS ---
@@ -247,8 +282,12 @@ const UserProfile: React.FC<UserProfileProps> = ({
 
   // 2. Handle Dynamic Prop Updates
   useEffect(() => {
-    setFormData(userData);
-    setInitialData(userData);
+    const normalizedUserData: UserData = {
+      ...userData,
+      emergencyContacts: normalizeEmergencyContacts(userData.emergencyContacts),
+    };
+    setFormData(normalizedUserData);
+    setInitialData(normalizedUserData);
     setLinkedCredentials(userData.LinkedCredentials || []);
     setOriginalLinkedCredentials(userData.LinkedCredentials || []);
     setHasChanges(false);
@@ -378,6 +417,32 @@ const UserProfile: React.FC<UserProfileProps> = ({
     setHasChanges(isDirty);
 
     if (status.message) setStatus({ type: "", message: "" });
+  };
+
+  type EmergencyContactField = "name" | "relationship" | "phone1" | "phone2";
+
+  const handleEmergencyContactChange = (
+    contactIndex: number,
+    field: EmergencyContactField,
+    value: string
+  ) => {
+    setFormData((prev) => {
+      const contacts = normalizeEmergencyContacts(prev.emergencyContacts);
+      const nextContacts = contacts.map((c, idx) =>
+        idx === contactIndex ? { ...c, [field]: value } : c
+      );
+
+      const updatedData: UserData = {
+        ...prev,
+        emergencyContacts: nextContacts,
+      };
+
+      const isDirty = JSON.stringify(updatedData) !== JSON.stringify(initialData);
+      setHasChanges(isDirty);
+      if (status.message) setStatus({ type: "", message: "" });
+
+      return updatedData;
+    });
   };
 
   const handleReset = () => {
@@ -1143,6 +1208,156 @@ const UserProfile: React.FC<UserProfileProps> = ({
                 />
               </div>
             </div>
+
+            {/* Emergency Contacts */}
+            <div
+              className={`rounded-lg shadow-sm border overflow-hidden transition-colors duration-700 ${
+                isDarkMode
+                  ? "bg-[#0f0f11] border-white/10"
+                  : "bg-white border-slate-200"
+              }`}
+            >
+              <div
+                className={`px-6 py-4 border-b flex items-center justify-between transition-colors duration-700 ${
+                  isDarkMode
+                    ? "border-white/10 bg-white/5"
+                    : "border-slate-100 bg-slate-50/50"
+                }`}
+              >
+                <h2
+                  className={`text-sm font-bold uppercase tracking-wide flex items-center gap-2 ${
+                    isDarkMode ? "text-blue-400" : "text-[#000080]"
+                  }`}
+                >
+                  <Phone size={18} /> Emergency Contacts
+                </h2>
+              </div>
+
+              <div className="p-6 space-y-5">
+                {[0, 1].map((idx) => {
+                  const isPrimary = idx === 0;
+                  return (
+                    <div
+                      key={idx}
+                      className={`rounded-xl border p-4 ${
+                        isPrimary
+                          ? "border-blue-500/40"
+                          : "border-slate-500/40"
+                      } border-l-4 ${
+                        isPrimary ? "border-blue-500" : "border-slate-500"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-3 mb-3">
+                        <div className="text-sm font-extrabold">
+                          {isPrimary ? "Primary Contact" : "Secondary Contact"}
+                        </div>
+                        <span
+                          className={`text-xs font-extrabold rounded-full px-3 py-1 ${
+                            isPrimary
+                              ? "bg-blue-600 text-white"
+                              : "bg-slate-500 text-white"
+                          }`}
+                        >
+                          {isPrimary ? "Primary Contact" : "Secondary Contact"}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-bold uppercase tracking-wider text-slate-600">
+                            Contact name
+                          </label>
+                          <input
+                            value={formData.emergencyContacts?.[idx]?.name || ""}
+                            onChange={(e) =>
+                              handleEmergencyContactChange(
+                                idx,
+                                "name",
+                                e.target.value
+                              )
+                            }
+                            className={`w-full px-4 py-2 rounded-md border text-sm ${
+                              isDarkMode
+                                ? "border-white/10 bg-white/5 text-white placeholder-slate-500"
+                                : "border-slate-300 bg-white text-slate-900 placeholder-slate-400"
+                            }`}
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-bold uppercase tracking-wider text-slate-600">
+                            Relationship
+                          </label>
+                          <input
+                            value={
+                              formData.emergencyContacts?.[idx]?.relationship || ""
+                            }
+                            onChange={(e) =>
+                              handleEmergencyContactChange(
+                                idx,
+                                "relationship",
+                                e.target.value
+                              )
+                            }
+                            className={`w-full px-4 py-2 rounded-md border text-sm ${
+                              isDarkMode
+                                ? "border-white/10 bg-white/5 text-white placeholder-slate-500"
+                                : "border-slate-300 bg-white text-slate-900 placeholder-slate-400"
+                            }`}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-bold uppercase tracking-wider text-slate-600">
+                            Mobile number 1
+                          </label>
+                          <input
+                            value={formData.emergencyContacts?.[idx]?.phone1 || ""}
+                            onChange={(e) =>
+                              handleEmergencyContactChange(
+                                idx,
+                                "phone1",
+                                e.target.value
+                              )
+                            }
+                            className={`w-full px-4 py-2 rounded-md border text-sm ${
+                              isDarkMode
+                                ? "border-white/10 bg-white/5 text-white placeholder-slate-500"
+                                : "border-slate-300 bg-white text-slate-900 placeholder-slate-400"
+                            }`}
+                            placeholder="e.g. 9876543210"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-bold uppercase tracking-wider text-slate-600">
+                            Mobile number 2 (alternate)
+                          </label>
+                          <input
+                            value={formData.emergencyContacts?.[idx]?.phone2 || ""}
+                            onChange={(e) =>
+                              handleEmergencyContactChange(
+                                idx,
+                                "phone2",
+                                e.target.value
+                              )
+                            }
+                            className={`w-full px-4 py-2 rounded-md border text-sm ${
+                              isDarkMode
+                                ? "border-white/10 bg-white/5 text-white placeholder-slate-500"
+                                : "border-slate-300 bg-white text-slate-900 placeholder-slate-400"
+                            }`}
+                            placeholder="Optional"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           {/* Side Column */}
@@ -1348,6 +1563,48 @@ const UserProfile: React.FC<UserProfileProps> = ({
                             : "—"}
                         </span>
                       </div>
+
+                      {(() => {
+                        const smsSent = n.smsSent === true;
+                        const recipients = Array.isArray(n.smsRecipients)
+                          ? n.smsRecipients
+                          : [];
+
+                        const maskPhone = (phone: string) => {
+                          const digits = String(phone || "").replace(/\D/g, "");
+                          if (!digits) return "";
+                          if (digits.length <= 4) return digits;
+                          return `XXXXXX${digits.slice(-4)}`;
+                        };
+
+                        const maskedRecipients = recipients
+                          .map((p) => maskPhone(p))
+                          .filter(Boolean)
+                          .join(", ");
+
+                        return (
+                          <div className="mt-2">
+                            <div
+                              className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border ${
+                                smsSent
+                                  ? "bg-teal-500/20 text-teal-300 border-teal-500/30"
+                                  : "bg-slate-500/10 text-slate-400 border-slate-300/20"
+                              }`}
+                            >
+                              <MessageSquare size={12} />
+                              {smsSent ? "SMS Sent" : "SMS Failed"}
+                            </div>
+
+                            <div
+                              className={`text-xs mt-1 ${
+                                isDarkMode ? "text-slate-400" : "text-slate-600"
+                              }`}
+                            >
+                              {maskedRecipients || "—"}
+                            </div>
+                          </div>
+                        );
+                      })()}
 
                       {accessorName && accessorRole && (
                         <div className="mt-2 text-xs font-bold text-slate-700">

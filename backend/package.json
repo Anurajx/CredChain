@@ -20,6 +20,7 @@
     "fuzzball": "^2.2.3",
     "mongodb": "4.1",
     "mongoose": "^9.1.1",
+    "twilio": "^5.0.0",
     "uuid": "^13.0.0"
   }
 }
