@@ -72,6 +72,12 @@ interface UserData {
         linkedAt?: string;
         actor?: string;
       }>
+    | Array<{
+        name: string;
+        relationship: string;
+        phone1: string;
+        phone2: string;
+      }>
     | undefined;
 }
 
