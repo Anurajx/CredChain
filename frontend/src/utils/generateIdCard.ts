@@ -25,6 +25,12 @@ interface UserData {
     linkedAt?: string;
     actor?: string;
   }>;
+  emergencyContacts?: Array<{
+    name: string;
+    relationship: string;
+    phone1: string;
+    phone2: string;
+  }>;
   [key: string]:
     | string
     | number
@@ -34,6 +40,12 @@ interface UserData {
         details?: string;
         linkedAt?: string;
         actor?: string;
+      }>
+    | Array<{
+        name: string;
+        relationship: string;
+        phone1: string;
+        phone2: string;
       }>
     | undefined;
 }
