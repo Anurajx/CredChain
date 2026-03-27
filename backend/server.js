@@ -27,6 +27,10 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok", version: "1.0.1", timestamp: new Date() });
 });
 
+app.get("/", (req, res) => {
+  res.json({ status: "active", version: "emergency-v2" });
+});
+
 const buildOffchainHash = (record) => SHA256(JSON.stringify(record || {})).toString();
 
 //adhaar is actually government ID number, did't refactor to avoid confusion
@@ -175,12 +179,12 @@ app.get("/api/state-stats", async (req, res) => {
           };
         }
         if (key === "fraudMarkers") {
-           statsByState[stateName].tamperCount = item.tamperCount || 0;
-           // Calculate a rudimentary fraud score 0-10
-           const baseScore = ((item.tamperCount * 2) + (item.fuzzyHighCount * 1.5)) / (item.total || 1);
-           statsByState[stateName].fraudScore = Math.min(10, Math.max(0.5, baseScore * 5));
+          statsByState[stateName].tamperCount = item.tamperCount || 0;
+          // Calculate a rudimentary fraud score 0-10
+          const baseScore = ((item.tamperCount * 2) + (item.fuzzyHighCount * 1.5)) / (item.total || 1);
+          statsByState[stateName].fraudScore = Math.min(10, Math.max(0.5, baseScore * 5));
         } else {
-           statsByState[stateName][key] = item.count;
+          statsByState[stateName][key] = item.count;
         }
       });
     };
@@ -879,7 +883,7 @@ app.put("/update-citizen/:id", async (req, res) => {
       { new: true }
     );
     if (!voter) return res.status(404).json({ message: "Citizen not found" });
-    
+
     // Log change to blockchain
     blockchain.logImmutableEvent({
       ID: req.params.id,
