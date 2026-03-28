@@ -1073,7 +1073,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                     Your UVID
                   </div>
                   <QRCodeSVG
-                    value={formData.ID}
+                    value={`${window.location.origin}/citizen-card/${formData.ID}`}
                     size={140}
                     bgColor="#FFFFFF"
                     fgColor="#000080"
